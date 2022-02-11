@@ -14,8 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 ```
 
-# Question 1
-```{r}
+```{r Library Decleration and Data Importing, echo=FALSE}
 #Libraries used for various plots
 library(tidyverse) #for wrangling
 library(mosaic) #for wrangling
@@ -23,11 +22,16 @@ library(ggplot2) #for plotting
 library(ggthemes) #to make things pretty
 library(ggmap) #for the map
 library(ggrepel) #to format labels on plots
-```
-```{r, include=FALSE}
+library(caret)
+library(modelr)
+library(foreach)
+library(rsample)
+
 ABIA = read.csv("ABIA.csv")
 AirportCodes = read.csv("airport-codes.csv")
 Billboard = read.csv("billboard.csv")
+Sclass = read.csv("sclass.csv")
+Olympics = read.csv("olympics_top20.csv")
 
 USMap = readRDS(file="USMap.RDS")
 #This is loaded from an RDS because in order to generate it normally requires registering an API key for GoogleMaps then downloading it. 
@@ -41,13 +45,13 @@ ColorSet19 = c("#7F3C8D","#11A579","#3969AC","#F2B701","#E73F74","#80BA5A",
 "#88CCEE","#CC6677","#DDCC77","#117733","#332288","#AA4499","#44AA99")
 ```
 
-
+# Question 1
 ## Key Question
 The key question here is twofold: first, do flights across the US tend to be delayed by distance or on an airport-by-airport basis. Based on that result, we also want an idea of what the best day of the week is to fly.
 
 ## Methods and Figures Pt. 1
 The answer to the first questions becomes fairly obvious when checking two different graphs. First, we can simply plot the distance and expected delays from incoming and outgoing flights
-```{r include=FALSE}
+```{r Plot Lable Setup, echo=FALSE}
 #Presetting some captions and titles for cleaner code in the writeup
 OutDistPlot_Labs = labs(title = "Flight Delays By Distance: Outbound")
 InDistPlot_Labs = labs(title = "Flight Delays by Distance: Inbound")
@@ -67,7 +71,7 @@ OutboundMap_Labs = labs(title = Outbound_Title, caption = Outbound_Caption)
 ```
 
 
-```{r}
+```{r Basic Plots, echo=FALSE}
 #Step one, a scatter plot of the distances
 #Start by filtering our data into inbound and outbound sets by filtering on origin/destination
 ABIA_In_ByFlight =  ABIA %>%
@@ -91,7 +95,7 @@ Out_DistPlot
 ```
 
 To do an eyeball test of the airport-dependency of delays, we can map the delays to the US
-```{r}
+```{r Airport Wrangling, echo=FALSE}
 AirportCodes_Filtered = AirportCodes %>%
   #Our one big filter, this gives us only those airports in the US
   #Who have valid IATA codes and are still open (closed airports overlap codes with open ones in some cases)
@@ -157,7 +161,7 @@ Outbound_MapPlot
 This is a pretty clear indication that the delays based are on a per-airport basis and not a flight-distance basis. There are certainly more formal regressions we could run to examine their significance, but for our purposes here, an eyeball test is more than adequate, if only because this is extremely intuitive and the purpose of this question was more to graph things on a map. For more interesting analysis, we can jump to our second question: Which days are best for each of the largest airports.
 
 ## Methods and Figures Pt. 2
-```` {r, include=FALSE}
+```` {r Map Lable Setups, echo=FALSE}
 #Again, right at the top we have aesthetics for some plots that don't matter untiil the end
 #This is just for clean reading top-bottom of our code
 
@@ -179,7 +183,7 @@ OutByDay_Labs = labs(title = OutByDay_Title, caption = OutByDay_Caption)
 
 ````
 
-```{r}
+```{r Best Day Charts, echo=FALSE}
 #Grab a vector for the top 10 most frequented airports in our dataset
 #Filtering to In/Out correctly, then counting, arranging, listing
 #head(10) does a good job of simply grabbing the top. pull() gets the values as a vector so that we can use %in% later
@@ -241,7 +245,7 @@ OutByDay_Plot = ggplot(data = ABIA_Out_ByDay) +
 OutByDay_Plot  
 ```
 And, in addition to the plots, a we can manually find the best day for each:
-```{r}
+```{r Best Day tables, echo=FALSE}
 #Top 10 origin airports and their least-delayed day on average, starting with 1=Monday")
 #-------------------------------------------------------------------------------------")
 ABIA_In_ByDay %>% group_by(Origin) %>% slice_min(MeanArrDelay, n=1) %>% arrange(desc(Count)) %>% head(10)
@@ -254,9 +258,9 @@ ABIA_Out_ByDay %>% group_by(Dest) %>% slice_min(MeanDepDelay, n=1) %>% arrange(d
 From the above, we can clearly see the best days to fly into or out of each of these airports. DFW, which is the most trafficked airport for Austin, is best flown from and to on a Saturday whereas Pheonix should be flown from on Saturday, but flown to on a Monday. 
 
 # Question 2
-These questions lack writeups since the only thing requested was a series of charts.
 ## Part A
-```{r}
+A table of the top 10 songs, measured by weeks in the top 100 chart
+```{r Quick BB Table, echo=FALSE}
 #Generating a chart of the top 10 songs since 1958, by week on the chart
 Billboard %>% 
   group_by(song, performer) %>% 
@@ -266,7 +270,8 @@ Billboard %>%
 ```
 
 ## Part B
-```{r}
+Diversity by year, measured by the number of unique songs on the in the top 100 each year
+```{r Song Diversity Plots, echo=FALSE}
 Billboard_YearDiversity = Billboard %>%
   filter(year != 1958, year != 2021) %>% #drop end years
   select(song, year) %>% #isolate the only columns we care about so unique() is easy
@@ -307,8 +312,8 @@ Billboard_DiversityPlot
 ```
 
 ## Part C
-
-```{r}
+A list of artists with more than 30 songs that spent at least ten weeks in the top 100, listed by the number of 10-week hits
+```{r TenWeek Plots, echo=FALSE}
 #Wrangle in two stages
 Billboard_ByTenWeek = Billboard %>%
   group_by(song, performer) %>% #step 1, filter out songs that spent fewer than 10 weeks on the chart
@@ -334,4 +339,186 @@ Billboard_TenWeekPlot = ggplot(data = Billboard_ByTenWeek,
   coord_flip()
 
 Billboard_TenWeekPlot
+```
+
+# Question 3
+## Part A
+This question is written in a way that has me confused. I am unsure if we are supposed to get *each* events' 95th percentile or simply for Athletics' events as a whole. In the case of each event individually, it is given by the following table.
+``` {r Height Percentile per Event, echo=FALSE}
+Olympics_95thPercentile = Olympics %>%
+  filter(sex=="F", sport=="Athletics") %>% #Filter into female
+  group_by(event) %>% #Group by each event
+  arrange(height) %>% #arrange stacks by height
+  filter(row_number()>=floor((n()*0.95))) %>% #drop bottom 95%
+  summarize(p0.95 = max(height)) #Grab the minimum of the remaining 5%
+head(Olympics_95thPercentile, 27)
+```
+However, if we are looking simply for the 95th percentile of all Athletics medalists, it is produced in the following (much smaller) table
+```{r Height Percentile Overall, echo=FALSE}
+Olympics_Athletics = Olympics %>%
+  filter(sex=="F", sport=="Athletics") #Filter into female
+quantile(Olympics_Athletics$height, 0.95)
+```
+## Part B
+The top variation among all events in females competitors heights is given by
+``` {r, echo=FALSE}
+Olympics_Height_SD = Olympics %>%
+  filter(sex=="F") %>%
+  #To reduce to only Athletics events:
+  #filter(sport == "Athletics") %>%
+  group_by(event) %>%
+  summarize(Std_Dv = sd(height)) %>%
+  arrange(desc(Std_Dv))
+head(Olympics_Height_SD, 1)
+```
+## Part C
+```{r Olympian Age over time, echo=FALSE}
+Olympics_Age_ByYear = Olympics %>%
+  filter(sport=="Swimming") %>%
+  group_by(sex, year) %>%
+  summarize(Age_Avg = mean(age), Gender = (ifelse(sex=="M", "Male", "Female"))) #Extra variable is added here as a workaround
+#For some reason, the label in the below plot was acting up so I simple created variables styled
+#According to the desired formatting rules
+
+Olympics_AgePlot = ggplot() +
+  geom_line(aes(year, Age_Avg, color=Gender), data=subset(Olympics_Age_ByYear, sex=="F")) +
+  geom_point(aes(year, Age_Avg, color=Gender), data=subset(Olympics_Age_ByYear, sex=="F")) +
+  geom_line(aes(year, Age_Avg, color=Gender), data=subset(Olympics_Age_ByYear, sex=="M")) +
+  geom_point(aes(year, Age_Avg, color=Gender), data=subset(Olympics_Age_ByYear, sex=="M")) +
+  scale_color_manual(values=c("purple", "#009107")) +
+  theme_minimal() +
+  labs(title="Average Age of Swimming Medalists by Year", caption="With the exception of a few notable years in the 1910s and 1920s,\
+       age for both men and women have been steadily increasing") +
+  ylab("Average Age") +
+  xlab("Year")
+Olympics_AgePlot
+```
+
+
+# Question 4
+
+``` {r Function Decleration, echo=FALSE}
+KNN_MultiKTesting <- function(DataSet, K_Grid, labs_KPlot, labs_PredPlot, SplitProp = 0.9) {
+  
+  #Step 1, Split data and run KNN models
+  DataSet_Split = initial_split(DataSet, prop=SplitProp)
+  DataSet_Train = training(DataSet_Split)
+  DataSet_Test = testing(DataSet_Split)
+  #Simple version, for each candidate K, train the model and then output the K and associated RMSE as a list
+  K_Errors = foreach(CurrentK=K_Grid, .combine='rbind') %do% {
+    CurrentModel = knnreg(price ~ mileage, k=CurrentK, data = DataSet_Train, use.all=FALSE)
+    c(K=CurrentK, Error = modelr::rmse(CurrentModel, data=DataSet_Test))
+  } %>% as.data.frame
+ 
+  #Isolate the minimum K for use in later graphs/parameters
+  K_Errors = K_Errors %>%
+    mutate(Min = (Error == min(Error)))
+  
+  #First plot of import, graphing the RMSE for various KNN models
+  Plot_K = ggplot(data = K_Errors, aes(K, Error, label=K)) +
+    geom_line() +
+    geom_point(aes(color=Min)) +
+    #Adding some labels and theme stuff
+    geom_text_repel(data=subset(K_Errors, Min), aes(color=Min), 
+                    nudge_y = -10) +
+    scale_color_manual(values=c("black", "green")) +
+    theme_minimal() +
+    labs_KPlot +
+    theme(legend.position = "none")
+  
+  #Pull out the minimum K as a num
+  MinError = K_Errors %>%
+    filter(Min) %>%
+    pull(K)
+  
+  #Rebuild the model for the minimum K. I could probably do this with more memory efficiency in the
+  #Original for loop, but that's a hassle and it's not expensive here
+  MinError_Model = knnreg(price ~ mileage, data=DataSet_Train, k=MinError)
+  
+  #Add predictions for the test case
+  DataSet_Test = DataSet_Test %>%
+    mutate(KNNPred = predict(MinError_Model, DataSet_Test))
+  
+  #Setting plot of import, the data set with the prediction overlay
+  Plot_Prediction = ggplot() +
+    geom_point(aes(mileage, price), data=DataSet) +
+    geom_line(aes(mileage, KNNPred), color="red", size=1.5, data=DataSet_Test)+
+    #Theme stuff
+    theme_minimal() +
+    labs_PredPlot +
+    xlab("Mileage") + 
+    ylab("Price")
+  
+  #Building a return vector that is named for clarity
+  ReturnVector = list(Plot_K, Plot_Prediction, MinError)
+  names(ReturnVector) <- c("Kplot", "PredictionPlot", "KVal")
+  return(ReturnVector)
+  
+}
+
+```
+
+RMSE values for a collection of K values with a 90/10 test-train split. Based on data for the S-Class 350
+``` {r 350 KPlot, echo=FALSE}
+K_Candidates = c(2, 4, 6, 8, 10, 15, 20, 25, 30, 35, 40, 45,
+                 50, 60, 70, 80, 90, 100, 125, 150, 175, 200, 250, 300)
+
+Sclass_350 = Sclass %>%
+  filter(trim=="350") %>%
+  select(price, mileage)
+
+Labs_350_KPlot = labs(title="K vs. RMSE for S-Class 350 with 90/10 Split")
+Labs_350_PredPlot = labs(title="Price vs. Mileage, S-Class 350", caption="KNN Prediction overlaid")
+
+Sclass_350_Plots = KNN_MultiKTesting(Sclass_350, K_Candidates, Labs_350_KPlot, Labs_350_PredPlot)
+
+Sclass_350_Plots["Kplot"]
+```
+
+The best-case K, in this case `Sclass_350_Plots["KVal"]`, overlaid on the observed data
+```{r 350 PredPlot, echo=FALSE}
+print("For K of ")
+Sclass_350_Plots["KVal"]
+Sclass_350_Plots["PredictionPlot"]
+
+```
+
+For the S-Class 65AMG, we can see the errors of each of the same K values as above.
+```{r 65AMG KPlot, echo=FALSE}
+
+Sclass_65AMG = Sclass %>%
+  filter(trim=="65 AMG") %>%
+  select(price, mileage)
+
+Labs_65AMG_KPlot = labs(title="K vs. RMSE for S-Class 65AMG with 90/10 Split")
+Labs_65AMG_PredPlot = labs(title="Price vs. Mileage, S-Class 65AMG", caption="KNN Prediction overlaid")
+
+Sclass_65AMG_Plots = KNN_MultiKTesting(Sclass_65AMG, K_Candidates, Labs_65AMG_KPlot, Labs_65AMG_PredPlot)
+
+Sclass_65AMG_Plots["Kplot"]
+```
+
+And again, with a best-case K, we can see how it fits the data
+``` {r 65AMG PredPlot, echo=FALSE}
+print("For K of ")
+Sclass_65AMG_Plots["KVal"]
+Sclass_65AMG_Plots["PredictionPlot"]
+
+```
+
+It is worth noting that, in this case, the above values are not at all stable. Below, we can see the variation across a collection of tests on the S-Class 350 data.
+```{r K Variation Plots, echo=FALSE}
+
+MinErrorKCollection = foreach(i=1:50, .combine='rbind') %do% {
+  c(Kval = KNN_MultiKTesting(Sclass_350, K_Candidates, Labs_350_KPlot, Labs_350_PredPlot)$KVal, Iterr = i)
+} %>% as.data.frame
+
+ExcessPlot = ggplot(data=MinErrorKCollection, aes(Iterr, Kval)) +
+  geom_line() +
+  geom_point() +
+  labs(title="Varying optimal K Values Across Multiple Test/Train Splits") +
+  ylab("K Value") +
+  xlab("Iteration Number") +
+  theme_minimal()
+ExcessPlot
 ```
