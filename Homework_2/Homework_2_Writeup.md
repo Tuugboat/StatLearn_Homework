@@ -30,7 +30,13 @@ less clear.
 This question hinges off the baseline model built in class which
 regresses price on all of the available *except* pctCollege, sewer,
 waterfront, landValue, newConstruction. This gives us the coefficients
-and out of sample errors (based on an 80/20 train/test split)
+and out of sample errors (based on an 80/20 train/test split). To ensure
+that all of our models produce comparable results, we scale each of the
+variables in our model except the outcome, price, and the dummy
+variables by two standard deviations: [based on this
+paper](https://onlinelibrary.wiley.com/doi/10.1002/sim.3107). Because of
+this, the various coefficients have more intuitive relationships to one
+another.
 
 <table>
 <thead>
@@ -42,60 +48,60 @@ and out of sample errors (based on an 80/20 train/test split)
 <tbody>
 <tr class="odd">
 <td>(Intercept)</td>
-<td style="text-align: right;">231468.4058</td>
+<td style="text-align: right;">228246.750</td>
 </tr>
 <tr class="even">
 <td>lotSize</td>
-<td style="text-align: right;">13381.3522</td>
+<td style="text-align: right;">15774.144</td>
 </tr>
 <tr class="odd">
 <td>age</td>
-<td style="text-align: right;">7773.2792</td>
+<td style="text-align: right;">5069.790</td>
 </tr>
 <tr class="even">
 <td>livingArea</td>
-<td style="text-align: right;">113649.8872</td>
+<td style="text-align: right;">118770.475</td>
 </tr>
 <tr class="odd">
 <td>bedrooms</td>
-<td style="text-align: right;">-27596.2767</td>
+<td style="text-align: right;">-28329.824</td>
 </tr>
 <tr class="even">
 <td>fireplaces</td>
-<td style="text-align: right;">2914.4746</td>
+<td style="text-align: right;">2305.778</td>
 </tr>
 <tr class="odd">
 <td>bathrooms</td>
-<td style="text-align: right;">32816.7059</td>
+<td style="text-align: right;">30396.109</td>
 </tr>
 <tr class="even">
 <td>rooms</td>
-<td style="text-align: right;">17359.6287</td>
+<td style="text-align: right;">11499.460</td>
 </tr>
 <tr class="odd">
 <td>heatinghot water/steam</td>
-<td style="text-align: right;">-6693.4782</td>
+<td style="text-align: right;">-8265.720</td>
 </tr>
 <tr class="even">
 <td>heatingelectric</td>
-<td style="text-align: right;">-491.1613</td>
+<td style="text-align: right;">1702.998</td>
 </tr>
 <tr class="odd">
 <td>fuelelectric</td>
-<td style="text-align: right;">-14862.2712</td>
+<td style="text-align: right;">-17587.214</td>
 </tr>
 <tr class="even">
 <td>fueloil</td>
-<td style="text-align: right;">-10227.8460</td>
+<td style="text-align: right;">-17199.442</td>
 </tr>
 <tr class="odd">
 <td>centralAirNo</td>
-<td style="text-align: right;">-20151.5709</td>
+<td style="text-align: right;">-14993.899</td>
 </tr>
 </tbody>
 </table>
 
-And an RMSE of 6.098667^{4}
+And an RMSE of 6.416515^{4}
 
 ### Part A
 
@@ -113,94 +119,94 @@ coefficients
 <tbody>
 <tr class="odd">
 <td>intercept</td>
-<td style="text-align: right;">289290.588</td>
+<td style="text-align: right;">289308.7381</td>
 </tr>
 <tr class="even">
 <td>lotSize</td>
-<td style="text-align: right;">9088.723</td>
+<td style="text-align: right;">9165.7116</td>
 </tr>
 <tr class="odd">
 <td>age</td>
-<td style="text-align: right;">-7258.172</td>
+<td style="text-align: right;">-7285.1494</td>
 </tr>
 <tr class="even">
 <td>landValue</td>
-<td style="text-align: right;">63429.224</td>
+<td style="text-align: right;">63462.5558</td>
 </tr>
 <tr class="odd">
 <td>livingArea</td>
-<td style="text-align: right;">84810.531</td>
+<td style="text-align: right;">84885.2219</td>
 </tr>
 <tr class="even">
 <td>pctCollege</td>
-<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.0000</td>
 </tr>
 <tr class="odd">
 <td>bedrooms</td>
-<td style="text-align: right;">-7584.385</td>
+<td style="text-align: right;">-7798.3775</td>
 </tr>
 <tr class="even">
 <td>fireplaces</td>
-<td style="text-align: right;">308.389</td>
+<td style="text-align: right;">337.0963</td>
 </tr>
 <tr class="odd">
 <td>bathrooms</td>
-<td style="text-align: right;">29803.404</td>
+<td style="text-align: right;">29827.5626</td>
 </tr>
 <tr class="even">
 <td>rooms</td>
-<td style="text-align: right;">10963.388</td>
+<td style="text-align: right;">11096.9438</td>
 </tr>
 <tr class="odd">
 <td>heatinghot air</td>
-<td style="text-align: right;">8871.768</td>
+<td style="text-align: right;">8944.4265</td>
 </tr>
 <tr class="even">
 <td>heatinghot water/steam</td>
-<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.0000</td>
 </tr>
 <tr class="odd">
 <td>heatingelectric</td>
-<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.0000</td>
 </tr>
 <tr class="even">
 <td>fuelelectric</td>
-<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.0000</td>
 </tr>
 <tr class="odd">
 <td>fueloil</td>
-<td style="text-align: right;">-216.839</td>
+<td style="text-align: right;">-342.3981</td>
 </tr>
 <tr class="even">
 <td>sewerpublic/commercial</td>
-<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.0000</td>
 </tr>
 <tr class="odd">
 <td>sewernone</td>
-<td style="text-align: right;">0.000</td>
+<td style="text-align: right;">0.0000</td>
 </tr>
 <tr class="even">
 <td>waterfrontNo</td>
-<td style="text-align: right;">-114282.335</td>
+<td style="text-align: right;">-114617.3397</td>
 </tr>
 <tr class="odd">
 <td>newConstructionNo</td>
-<td style="text-align: right;">38156.464</td>
+<td style="text-align: right;">38442.2646</td>
 </tr>
 <tr class="even">
 <td>centralAirNo</td>
-<td style="text-align: right;">-9690.887</td>
+<td style="text-align: right;">-9674.9164</td>
 </tr>
 </tbody>
 </table>
 
-This has an RMSE of 5.864742^{4}. This is somewhat incomparable to the
-above RMSE for out class model since that RMSE is based on a single
-train/test split and this is the result of a 10-fold cross-validation. A
-10-fold cross-validation average error of the baseline linear model is
-6.613106^{4}. Note that these are based on different folds, which limits
-their values but does show that the lasso model is *clearly*
-outperforming the baseline.
+This has an RMSE of 5.876774^{4}. This is somewhat incomparable to the
+above RMSE for the class model since that RMSE is based on a single
+train/test split and this is the result of a 10-fold cross-validation
+average. A 10-fold cross-validation average error of the baseline linear
+model is 6.609532^{4}. Note that these are based on different folds,
+which limits their values but does show that the lasso model is
+*clearly* outperforming the baseline.
 
 ### Part B
 
@@ -214,11 +220,11 @@ associated error) through cross validation.
 10-fold cross-validated average errors for various values of K
 </p>
 
-This gives us an optimal K value of 8 which yields an RMSE of
-6.212621^{4}. Notably, these are based on the same folds as the baseline
+This gives us an optimal K value of 10 which yields an RMSE of
+6.135262^{4}. Notably, these are based on the same folds as the baseline
 model above, so the values are directly comparable. The net RMSE change
 *R**M**S**E*<sub>*K**N**N*</sub> − *R**M**S**E*<sub>*B**a**s**e**l**i**n**e*</sub>=
--4004.85.
+-4742.7.
 
 ### Comparison
 
@@ -227,7 +233,7 @@ model in class; the only remaining question is which model performs
 *best*. In this case, the lasso model is substantially better, with an
 RMSE change of
 *R**M**S**E*<sub>*L**a**s**s**o*</sub> − *R**M**S**E*<sub>*K**N**N*</sub>=
--3478.79. Our clear and stable performance is then
+-2584.88. Our clear and stable performance is then
 *R**M**S**E*<sub>*B**a**s**e**l**i**n**e*</sub> &gt; *R**M**S**E*<sub>*K**N**N*</sub> &gt; *R**M**S**E*<sub>*L**a**s**s**o*</sub>.
 Of course, this is only one result; to verify that it is stable, we can
 simply repeat the same test as above multiple times.
@@ -317,14 +323,14 @@ we get obtain the coefficients:
 </table>
 
 Obviously, the interesting point of note is the reduced likelihood to
-default given a poor or terrible credit history. This might seem weird,
-but is the inevitable result of the over sampled defaults in the data
-set. Since they sample the defaulted loans then matched them with
-similar loans, you can imagine that there are a ton of loans that were
-obviously not going to default included, and a substantial number of
-them are held by debtors with a good credit history. This would result
-in an inflated chance of defaulting for those groups and a relatively
-deflated chance for those with better chances of defaulting initially.
+default given a poor or terrible credit history. This is the inevitable
+result of the over sampled defaults in the data set. Since they sample
+the defaulted loans then matched them with similar loans, this is
+analogous to simply taking a representative sample that included the
+desired number of defaults and then dropping a number non-defaulted
+loans. This would result in an inflated chance of defaulting for those
+groups that have a low rate of default and a relatively deflated chance
+for those with better chances of defaulting initially.
 
 # Problem 4
 
@@ -345,7 +351,7 @@ than business travelers. Finally, there is a model generated by a lasso
 regression on all single and pairwise interactions, including engineered
 features, in the model except for the arrival date; this model is
 referred to as “Lasso” in the figures and tables. The lasso model is
-notably larger than any of the other models in our set, with 258
+notably larger than any of the other models in our set, with 277
 coefficients being considered.
 
 Our first goal is to train these models on a standard train/test split
@@ -363,23 +369,23 @@ possible answers.
 <tbody>
 <tr class="odd">
 <td>Null Model</td>
-<td style="text-align: left;">0.9182</td>
+<td style="text-align: left;">0.9202</td>
 </tr>
 <tr class="even">
 <td>Baseline 1</td>
-<td style="text-align: left;">0.9182</td>
+<td style="text-align: left;">0.9202</td>
 </tr>
 <tr class="odd">
 <td>Baseline 2</td>
-<td style="text-align: left;">0.9324</td>
+<td style="text-align: left;">0.936</td>
 </tr>
 <tr class="even">
 <td>Custom</td>
-<td style="text-align: left;">0.9322</td>
+<td style="text-align: left;">0.9356</td>
 </tr>
 <tr class="odd">
 <td>Lasso</td>
-<td style="text-align: left;">0.9236</td>
+<td style="text-align: left;">0.9292</td>
 </tr>
 </tbody>
 </table>
@@ -393,6 +399,8 @@ null. The Lasso is performing slightly worse than the other two model on
 the test set, but the difference is small, so it is unclear if this is
 due to the lasso not producing a good model in this case, or if the
 Custom model is over fit for the train data.
+
+## Model Evaluation Pt. 1
 
 After training and initially evaluating out models, we can begin on our
 evaluation data. To pick a functional threshold we can look to the ROC
@@ -415,8 +423,10 @@ other ROC curves are very similar to one another, so choosing a
 threshold for this model should not require to many judgment decisions.
 In this case, we choose the threshold that gives us the nearest FPR to
 0.25 since that seems to be a sound middle ground; this results in a
-threshold of 0.0649351. The following results do not substantially
+threshold of 0.0659341. The following results do not substantially
 change for a number of thresholds around that choice.
+
+## Model Evaluation Pt. 2
 
 We can then split our valuation data into 20 folds and predict the
 number of visits with children for each of those groups, then compare

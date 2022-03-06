@@ -42,7 +42,6 @@ theme_set(theme_minimal())
 
 # Problem 1
 
-
 ``` {r, echo = FALSE}
 #Fixing factor levels so that the graphs are in a sensible order later
 CapMetro %<>% mutate(day_of_week = factor(day_of_week,
@@ -97,7 +96,7 @@ SaratogaHouses_Scale = SaratogaHouses %>%
 SaratogaHouses_Scale_Folds = crossv_kfold(SaratogaHouses_Scale, k=K_Folds)
 ```
 
-This question hinges off the baseline model built in class which regresses price on all of the available *except* pctCollege, sewer, waterfront, landValue, newConstruction. This gives us the coefficients and out of sample errors (based on an 80/20 train/test split)
+This question hinges off the baseline model built in class which regresses price on all of the available *except* pctCollege, sewer, waterfront, landValue, newConstruction. This gives us the coefficients and out of sample errors (based on an 80/20 train/test split). To ensure that all of our models produce comparable results, we scale each of the variables in our model except the outcome, price, and the dummy variables by two standard deviations: [based on this paper](https://onlinelibrary.wiley.com/doi/10.1002/sim.3107). Because of this, the various coefficients have more intuitive relationships to one another.
 
 ```{r 2 baseline, echo=FALSE}
 SaratogaHouses_Split = initial_split(SaratogaHouses_Scale, prop=0.8)
@@ -129,7 +128,7 @@ Err_Lasso = sqrt(SH_Lasso_CV$cvm[SH_Lasso_CV$seg.min])
 Err_Baseline = mean(lm_Class_Errors)
 ```
 
-This has an RMSE of `r round(Err_Lasso, 2)`. This is somewhat incomparable to the above RMSE for out class model since that RMSE is based on a single train/test split and this is the result of a 10-fold cross-validation. A 10-fold cross-validation average error of the baseline linear model is `r round(Err_Baseline, 2)`. Note that these are based on different folds, which limits their values but does show that the lasso model is *clearly* outperforming the baseline.
+This has an RMSE of `r round(Err_Lasso, 2)`. This is somewhat incomparable to the above RMSE for the class model since that RMSE is based on a single train/test split and this is the result of a 10-fold cross-validation average. A 10-fold cross-validation average error of the baseline linear model is `r round(Err_Baseline, 2)`. Note that these are based on different folds, which limits their values but does show that the lasso model is *clearly* outperforming the baseline.
 
 ### Part B
 In generating a good KNN model, we (unsurprisingly) do well by considering all of the non-zero vairables produced by the Lasso model. Following the standard process of finding the optimal K (and it's associated error) through cross validation.
@@ -170,6 +169,7 @@ CV_Grid %>%
   theme(legend.position="none")
 
 ```
+
 This gives us an optimal K value of `r OptimalK` which yields an RMSE of `r Err_KNN %>% round(2)`. Notably, these are based on the same folds as the baseline model above, so the values are directly comparable. The net RMSE change $RMSE_{KNN} - RMSE_{Baseline} =$ `r round(Err_KNN - Err_Baseline, 2)`.
 
 ### Comparison
@@ -181,10 +181,10 @@ Both the lasso and the KNN model are performing better than the baseline model i
 K_Folds_Rep = 10
 ```
 
-```{r StabilityTest, eval=F, include=F, cache=T}
+```{r StabilityTest, eval=F, include=F}
 
 #IMPORTANT: This block generates the data used by the figure in the following chunk. It takes forever to run. 
-#Currently, the eval flag is set to false so it does not run.every time. It saves data into an RDS that is then loaded for subsequent use. This is a more permanent cahce than simply cache=T
+#Currently, the eval flag is set to false so it does not run every time. It saves data into an RDS that is then loaded for subsequent use.
 
 #TO GENERATE A NEW FIGURE: simply set eval=T, start knitting, and go get a snack
 
@@ -284,7 +284,7 @@ KTable %>% as.data.frame %>% select(Estimate) %>% round(2) %>% knitr::kable("sim
 
 ```
 
-Obviously, the interesting point of note is the reduced likelihood to default given a poor or terrible credit history. This might seem weird, but is the inevitable result of the over sampled defaults in the data set. Since they sample the defaulted loans then matched them with similar loans, you can imagine that there are a ton of loans that were obviously not going to default included, and a substantial number of them are held by debtors with a good credit history. This would result in an inflated chance of defaulting for those groups and a relatively deflated chance for those with better chances of defaulting initially. 
+Obviously, the interesting point of note is the reduced likelihood to default given a poor or terrible credit history. This is the inevitable result of the over sampled defaults in the data set. Since they sample the defaulted loans then matched them with similar loans, this is analogous to simply taking a representative sample that included the desired number of defaults and then dropping a number non-defaulted loans. This would result in an inflated chance of defaulting for those groups that have a low rate of default and a relatively deflated chance for those with better chances of defaulting initially.
 
 # Problem 4
 ## Model Building
@@ -361,6 +361,8 @@ HD_Y_Val = Hotels_Dev %>% filter(SetID == "Val") %>% select(children)
 
 
 ```{r ModelTrain, include=FALSE}
+#If you are looking for the code chunk that slows this file down a ton, it's right here.
+
 #Given Baselines
 HD_Baseline_1 = glm(children ~ market_segment + adults + customer_type + is_repeated_guest, data = Hotels_Dev_Train, family = 'binomial')
 HD_Baseline_2 = glm(children ~ .-arrival_date-ArrivalWDay-ArrivedWeekend, data=Hotels_Dev_Train, family="binomial") #Makes sure to pull out the two engineered variables
@@ -425,6 +427,8 @@ knitr::kable(AccList, "simple", col.names = "Accuracy")
 ```
 
 On this test/train split, the Baseline 2 and the Baseline 1 model are performing very similarly; this is not surprising since there is very little difference between the two models. The Baseline 1 model is performing identically to the null model: at threshold $t=0.5$ the Baseline 1 model predicts no children at all, so it is identically the null. The Lasso is performing slightly worse than the other two model on the test set, but the difference is small, so it is unclear if this is due to the lasso not producing a good model in this case, or if the Custom model is over fit for the train data.
+
+## Model Evaluation Pt. 1
 
 After training and initially evaluating out models, we can begin on our evaluation data. To pick a functional threshold we can look to the ROC curves seen in the ROC Curve graph
 
@@ -609,6 +613,8 @@ FirstThreshold = GetThreshold(FirstFPR, ROCMeasurements)
 ```
 
 Interestingly, the Baseline 1 produces almost no correct guesses at all, regardless of the threshold. Each of the points visible on these curves represents a different threshold value, so in addition to the steep line, we can clearly see that there are no accurate thresholds. The other ROC curves are very similar to one another, so choosing a threshold for this model should not require to many judgment decisions. In this case, we choose the threshold that gives us the nearest FPR to `r FirstFPR` since that seems to be a sound middle ground; this results in a threshold of `r FirstThreshold`. The following results do not substantially change for a number of thresholds around that choice.
+
+## Model Evaluation Pt. 2
 
 We can then split our valuation data into 20 folds and predict the number of visits with children for each of those groups, then compare that to the actual number of visits in each of the groups. By doing this we can generate a "miss number", how many children we are off for a given number of visits.
 
