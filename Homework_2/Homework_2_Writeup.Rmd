@@ -640,23 +640,4 @@ FoldPredictions %>%
 
 ```
 
-```{r ModelEval2D, include=FALSE}
-SecondFPR = 0.215
-SecondThreshold = GetThreshold(SecondFPR, ROCMeasurements)
-```
-
-The average miss value tells the clearest story of all; the lasso model is clearly the best performing of all the models; the other models are actually worse than simply guessing no children will be present. The most notable part of this is that we have not chosen a threshold that is particularly favorable to the lasso, relative to other models. If we choose the particular value of acceptable false positives such that the Lasso is the most accurate possible (instead of some more situationally appropriate rate) we can use $FPR =$ `r SecondFPR` to get a threshold of `r SecondThreshold`. By doing this we can achieve a very low miss rate for the lasso, though we do not get significantly better for the other models. Note that in order to do this we only have to shift our acceptable false positive rate by `r SecondFPR-FirstFPR` and our threshold by `r SecondThreshold - FirstThreshold`.
-
-```{r ModelEval2E, echo=FALSE, fig.cap="This shows the average miss values if we choose our threshold to intentionally minimize the miss values for the Lasso"}
-MakePredictions(SecondFPR, ROCMeasurements) %>%
-  filter(Model != "Actual") %>%
-  group_by(Model) %>% 
-  summarize(AvgMiss = mean(Miss)) %>%
-  ggplot(aes(Model, AvgMiss, fill=Model, label=AvgMiss)) %>% +
-  geom_col() +
-  geom_text(vjust=-.5) +
-  scale_fill_brewer(type="qual", palette = 3) +
-  labs(title="Average Miss Values, Lasso Miss Minimized", x="Model", y="Average Miss")
-```
-
-So, in conclusion, a lasso-fitted model on all single variables and pairwise interactions is the clearly best performer and, depending on the situation of the actual model, it is possible that it is incredibly accurate.
+The average miss value tells the clearest story of all; the lasso model is clearly the best performing of all the models; the other models are actually worse than simply guessing no children will be present.

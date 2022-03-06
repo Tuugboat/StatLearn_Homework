@@ -42,60 +42,60 @@ and out of sample errors (based on an 80/20 train/test split)
 <tbody>
 <tr class="odd">
 <td>(Intercept)</td>
-<td style="text-align: right;">228109.568</td>
+<td style="text-align: right;">231468.4058</td>
 </tr>
 <tr class="even">
 <td>lotSize</td>
-<td style="text-align: right;">14765.148</td>
+<td style="text-align: right;">13381.3522</td>
 </tr>
 <tr class="odd">
 <td>age</td>
-<td style="text-align: right;">4183.103</td>
+<td style="text-align: right;">7773.2792</td>
 </tr>
 <tr class="even">
 <td>livingArea</td>
-<td style="text-align: right;">110699.803</td>
+<td style="text-align: right;">113649.8872</td>
 </tr>
 <tr class="odd">
 <td>bedrooms</td>
-<td style="text-align: right;">-25182.446</td>
+<td style="text-align: right;">-27596.2767</td>
 </tr>
 <tr class="even">
 <td>fireplaces</td>
-<td style="text-align: right;">1691.810</td>
+<td style="text-align: right;">2914.4746</td>
 </tr>
 <tr class="odd">
 <td>bathrooms</td>
-<td style="text-align: right;">27363.997</td>
+<td style="text-align: right;">32816.7059</td>
 </tr>
 <tr class="even">
 <td>rooms</td>
-<td style="text-align: right;">18192.809</td>
+<td style="text-align: right;">17359.6287</td>
 </tr>
 <tr class="odd">
 <td>heatinghot water/steam</td>
-<td style="text-align: right;">-10647.893</td>
+<td style="text-align: right;">-6693.4782</td>
 </tr>
 <tr class="even">
 <td>heatingelectric</td>
-<td style="text-align: right;">-9391.696</td>
+<td style="text-align: right;">-491.1613</td>
 </tr>
 <tr class="odd">
 <td>fuelelectric</td>
-<td style="text-align: right;">-6818.571</td>
+<td style="text-align: right;">-14862.2712</td>
 </tr>
 <tr class="even">
 <td>fueloil</td>
-<td style="text-align: right;">-9795.771</td>
+<td style="text-align: right;">-10227.8460</td>
 </tr>
 <tr class="odd">
 <td>centralAirNo</td>
-<td style="text-align: right;">-16742.172</td>
+<td style="text-align: right;">-20151.5709</td>
 </tr>
 </tbody>
 </table>
 
-And an RMSE of 6.815351^{4}
+And an RMSE of 6.098667^{4}
 
 ### Part A
 
@@ -113,92 +113,92 @@ coefficients
 <tbody>
 <tr class="odd">
 <td>intercept</td>
-<td style="text-align: right;">289341.0885</td>
+<td style="text-align: right;">289290.588</td>
 </tr>
 <tr class="even">
 <td>lotSize</td>
-<td style="text-align: right;">9246.7796</td>
+<td style="text-align: right;">9088.723</td>
 </tr>
 <tr class="odd">
 <td>age</td>
-<td style="text-align: right;">-7294.9012</td>
+<td style="text-align: right;">-7258.172</td>
 </tr>
 <tr class="even">
 <td>landValue</td>
-<td style="text-align: right;">63483.5465</td>
+<td style="text-align: right;">63429.224</td>
 </tr>
 <tr class="odd">
 <td>livingArea</td>
-<td style="text-align: right;">84971.4241</td>
+<td style="text-align: right;">84810.531</td>
 </tr>
 <tr class="even">
 <td>pctCollege</td>
-<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.000</td>
 </tr>
 <tr class="odd">
 <td>bedrooms</td>
-<td style="text-align: right;">-8046.0336</td>
+<td style="text-align: right;">-7584.385</td>
 </tr>
 <tr class="even">
 <td>fireplaces</td>
-<td style="text-align: right;">351.2291</td>
+<td style="text-align: right;">308.389</td>
 </tr>
 <tr class="odd">
 <td>bathrooms</td>
-<td style="text-align: right;">29836.9266</td>
+<td style="text-align: right;">29803.404</td>
 </tr>
 <tr class="even">
 <td>rooms</td>
-<td style="text-align: right;">11252.6972</td>
+<td style="text-align: right;">10963.388</td>
 </tr>
 <tr class="odd">
 <td>heatinghot air</td>
-<td style="text-align: right;">9016.8109</td>
+<td style="text-align: right;">8871.768</td>
 </tr>
 <tr class="even">
 <td>heatinghot water/steam</td>
-<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.000</td>
 </tr>
 <tr class="odd">
 <td>heatingelectric</td>
-<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.000</td>
 </tr>
 <tr class="even">
 <td>fuelelectric</td>
-<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.000</td>
 </tr>
 <tr class="odd">
 <td>fueloil</td>
-<td style="text-align: right;">-474.9373</td>
+<td style="text-align: right;">-216.839</td>
 </tr>
 <tr class="even">
 <td>sewerpublic/commercial</td>
-<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.000</td>
 </tr>
 <tr class="odd">
 <td>sewernone</td>
-<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.000</td>
 </tr>
 <tr class="even">
 <td>waterfrontNo</td>
-<td style="text-align: right;">-114936.1045</td>
+<td style="text-align: right;">-114282.335</td>
 </tr>
 <tr class="odd">
 <td>newConstructionNo</td>
-<td style="text-align: right;">38702.8604</td>
+<td style="text-align: right;">38156.464</td>
 </tr>
 <tr class="even">
 <td>centralAirNo</td>
-<td style="text-align: right;">-9667.2063</td>
+<td style="text-align: right;">-9690.887</td>
 </tr>
 </tbody>
 </table>
 
-This has an RMSE of 5.863251^{4}. This is somewhat incomparable to the
+This has an RMSE of 5.864742^{4}. This is somewhat incomparable to the
 above RMSE for out class model since that RMSE is based on a single
 train/test split and this is the result of a 10-fold cross-validation. A
 10-fold cross-validation average error of the baseline linear model is
-6.619045^{4}. Note that these are based on different folds, which limits
+6.613106^{4}. Note that these are based on different folds, which limits
 their values but does show that the lasso model is *clearly*
 outperforming the baseline.
 
@@ -215,10 +215,10 @@ associated error) through cross validation.
 </p>
 
 This gives us an optimal K value of 8 which yields an RMSE of
-6.158382^{4}. Notably, these are based on the same folds as the baseline
+6.212621^{4}. Notably, these are based on the same folds as the baseline
 model above, so the values are directly comparable. The net RMSE change
 *R**M**S**E*<sub>*K**N**N*</sub> − *R**M**S**E*<sub>*B**a**s**e**l**i**n**e*</sub>=
--4606.64.
+-4004.85.
 
 ### Comparison
 
@@ -227,7 +227,7 @@ model in class; the only remaining question is which model performs
 *best*. In this case, the lasso model is substantially better, with an
 RMSE change of
 *R**M**S**E*<sub>*L**a**s**s**o*</sub> − *R**M**S**E*<sub>*K**N**N*</sub>=
--2951.3. Our clear and stable performance is then
+-3478.79. Our clear and stable performance is then
 *R**M**S**E*<sub>*B**a**s**e**l**i**n**e*</sub> &gt; *R**M**S**E*<sub>*K**N**N*</sub> &gt; *R**M**S**E*<sub>*L**a**s**s**o*</sub>.
 Of course, this is only one result; to verify that it is stable, we can
 simply repeat the same test as above multiple times.
@@ -447,24 +447,4 @@ interactions is clearly the best performer here.
 
 The average miss value tells the clearest story of all; the lasso model
 is clearly the best performing of all the models; the other models are
-actually worse than simply guessing no children will be present. The
-most notable part of this is that we have not chosen a threshold that is
-particularly favorable to the lasso, relative to other models. If we
-choose the particular value of acceptable false positives such that the
-Lasso is the most accurate possible (instead of some more situationally
-appropriate rate) we can use *F**P**R*= 0.215 to get a threshold of
-0.0729271. By doing this we can achieve a very low miss rate for the
-lasso, though we do not get significantly better for the other models.
-Note that in order to do this we only have to shift our acceptable false
-positive rate by -0.035 and our threshold by 0.007992.
-
-<img src="Homework_2_Writeup_files/figure-markdown_strict/ModelEval2E-1.png" alt="This shows the average miss values if we choose our threshold to intentionally minimize the miss values for the Lasso"  />
-<p class="caption">
-This shows the average miss values if we choose our threshold to
-intentionally minimize the miss values for the Lasso
-</p>
-
-So, in conclusion, a lasso-fitted model on all single variables and
-pairwise interactions is the clearly best performer and, depending on
-the situation of the actual model, it is possible that it is incredibly
-accurate.
+actually worse than simply guessing no children will be present.
