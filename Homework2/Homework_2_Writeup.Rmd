@@ -1,0 +1,662 @@
+---
+title: "Homework_2_Writeup"
+author: "Robert Petit"
+date: "3/3/2022"
+output: 
+  md_document : default
+  pdf_document : 
+    extra_dependencies: ["float"]
+knit: (function(inputFile, encoding) {
+  rmarkdown::render(inputFile, output_format = "all") })
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(fig.pos = "H", out.extra = "")
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+```
+
+``` {r Preamble, echo=FALSE}
+library(tidyverse) #for wrangling
+library(magrittr)
+library(mosaic) #for wrangling
+library(ggplot2) #for plotting
+library(ggthemes) #to make things pretty
+library(rsample) #for train/test split
+library(caret) #knn
+library(modelr) #knn
+library(foreach) #For loops
+library(gamlr) #lasso
+library(glue) #paste sucks
+library(kableExtra) #more aesthetics
+library(lubridate) #date fun
+
+CapMetro = read.csv("capmetro_UT.csv")
+data("SaratogaHouses")
+Credit = read.csv("german_credit.csv")
+Hotels_Dev = read.csv("hotels_dev.csv")
+Hotels_Val = read.csv("hotels_Val.csv")
+
+theme_set(theme_minimal())
+```
+
+# Problem 1
+
+
+``` {r, echo = FALSE}
+#Fixing factor levels so that the graphs are in a sensible order later
+CapMetro %<>% mutate(day_of_week = factor(day_of_week,
+                                          levels=c("Mon", "Tue", "Wed","Thu", "Fri", "Sat", "Sun")),
+                     month = factor(month,
+                                    levels=c("Sep", "Oct","Nov")))
+```
+
+
+```{r 1A, fig.cap = "This figure includes the average boarding rate (in Boarding per 15 minutes) on each hour of day, by day of week (faceted) and month (by color).The peak boarding time is largely similar on weekdays, with slight variations; the main notable variation is on Monday boarding in September,and Wednesday/Thursday/Friday boarding in November. Almost certainly, this is because of Labor Day, a Monday in September, and Thanksgiving Break,which runs Wednesday-Sunday in November. Since these are month long averages, missing one day is a 25% drop in boarding on that day. The only other wide variation of note is the large drop on weekends; given this is a campus bus route, reduced traffic on weekends makes sense.", echo=FALSE}
+CapMetro %>%
+  group_by(hour_of_day, day_of_week, month) %>%
+  summarize(Avg_Boarding = mean(boarding)) %>%
+  ggplot(aes(hour_of_day, Avg_Boarding, color=month)) +
+  geom_line() +
+  geom_point(size=0.3) +
+  facet_wrap(~day_of_week) +
+  scale_color_brewer(type="qual", palette=2) +
+  labs(
+      title="Average Boarding by Hour, Day, and Month", 
+      x="Hour of Day",
+      y = "Average Number of Boardings",
+      color="Month")
+```
+
+
+```{r 1B, echo=FALSE, fig.cap="This figure includes the boarding in a fifteen minute window by temperature, separated by hour of the day. For the times in the middle of the day (10:00-17:00) we see some upward trends in the data This indicates that, if there is truly a trend present, it is going to be strongest in those hours. At other times of day, the relationship seems less clear."}
+CapMetro %>%
+  ggplot(aes(temperature, boarding, color=weekend, shape=weekend)) +
+  geom_point(alpha=0.3) +
+  facet_wrap(~hour_of_day) +
+  scale_color_brewer(type="qual", palette=2) +
+  labs(
+    title="Boardings by Temperature and Hour of Day",
+    y="Boarding Number",
+    x="Temperature",
+    color="Weekday/Weekend",
+    shape="Weekday/Weekend"
+  )
+```
+
+
+# Problem 2
+
+```{r 2pream, echo=FALSE}
+K_Folds = 10
+
+#Here we scare the numeric, non-outcome variables by 2 standard deviations
+SaratogaHouses_Scale = SaratogaHouses %>%
+  mutate((across(where(is.numeric) & !price, ~scale(.x) *0.5)))
+
+SaratogaHouses_Scale_Folds = crossv_kfold(SaratogaHouses_Scale, k=K_Folds)
+```
+
+This question hinges off the baseline model built in class which regresses price on all of the available *except* pctCollege, sewer, waterfront, landValue, newConstruction. This gives us the coefficients and out of sample errors (based on an 80/20 train/test split)
+
+```{r 2 baseline, echo=FALSE}
+SaratogaHouses_Split = initial_split(SaratogaHouses_Scale, prop=0.8)
+SaratogaHouses_Train = training(SaratogaHouses_Split)
+SaratogaHouses_Test = testing(SaratogaHouses_Split)
+
+lm_Class_Models = map(SaratogaHouses_Scale_Folds$train, 
+             ~lm(price ~ . - pctCollege - sewer - waterfront - landValue - newConstruction, data=.))
+lm_Class_Errors = map2_dbl(lm_Class_Models, SaratogaHouses_Scale_Folds$test, rmse)
+
+lm_ClassMedium = lm(price ~ . - pctCollege - sewer - waterfront - landValue - newConstruction, data=SaratogaHouses_Train)
+CoefTable = coef(lm_ClassMedium)
+knitr::kable(CoefTable, "simple", col.names = "Coefficients") %>% kable_material(c("striped", "hover"))
+#glue("As well as an RMSE of {round(rmse(lm_ClassMedium, data=SaratogaHouses_Test), 2)}")
+```
+
+And an RMSE of `r round(rmse(lm_ClassMedium, data=SaratogaHouses_Test), 2)`
+
+### Part A
+
+Generating a linear model that outperforms the baseline model is simple if you select a model with a cross-validated lasso. This gives us the coefficients
+
+```{r 2A, echo=FALSE}
+SH_X = model.matrix(price ~.-1, data=SaratogaHouses_Scale)
+SH_Y = SaratogaHouses_Scale$price
+SH_Lasso_CV = cv.gamlr(SH_X, SH_Y, nfold=K_Folds)
+coef(SH_Lasso_CV, select="min") %>% as.matrix() %>% as.data.frame() %>% knitr::kable("simple", col.names = "Coefficients") %>% kable_material(c("striped", "hover"))
+Err_Lasso = sqrt(SH_Lasso_CV$cvm[SH_Lasso_CV$seg.min])
+Err_Baseline = mean(lm_Class_Errors)
+```
+
+This has an RMSE of `r round(Err_Lasso, 2)`. This is somewhat incomparable to the above RMSE for out class model since that RMSE is based on a single train/test split and this is the result of a 10-fold cross-validation. A 10-fold cross-validation average error of the baseline linear model is `r round(Err_Baseline, 2)`. Note that these are based on different folds, which limits their values but does show that the lasso model is *clearly* outperforming the baseline.
+
+### Part B
+In generating a good KNN model, we (unsurprisingly) do well by considering all of the non-zero vairables produced by the Lasso model. Following the standard process of finding the optimal K (and it's associated error) through cross validation.
+
+```{r 2B, echo=FALSE, fig.cap="10-fold cross-validated average errors for various values of K"}
+
+#Choosing the Optimal K
+
+K_Candidates = c(2, 4, 6, 8, 10, 15, 20, 25, 30, 35, 40, 45,
+                 50, 60, 70, 80, 90, 100, 125, 150, 175, 200, 250, 300)
+
+CV_Grid = foreach(CurrentK=K_Candidates, .combine='rbind') %dopar% {
+  #Set up the map of each of the folds
+  Models = map(SaratogaHouses_Scale_Folds$train, ~knnreg(price ~ lotSize + age + landValue + livingArea +bedrooms
+                                                         + fireplaces + bathrooms + rooms + heating
+                                                         + fuel + waterfront + newConstruction + centralAir,
+                                                         k=CurrentK, data = ., use.all=FALSE))
+  #Calculate the errors with a map of two inputs, double out
+  Errors = map2_dbl(Models, SaratogaHouses_Scale_Folds$test, modelr::rmse)
+  #The would normally just read into the console, but with .combine='rbind' 
+  #it stacks as a row during foreach() %do%
+  c(K=CurrentK, AverageError = mean(Errors), Std_Err = sd(Errors)/sqrt(K_Folds))
+} %>% as.data.frame #turns out stack of vectors from .combine into a data frame
+
+OptimalK = CV_Grid %>% filter(AverageError == min(CV_Grid$AverageError)) %>% pull(K) #Best K
+Err_KNN = min(CV_Grid$AverageError) #Best Error
+```
+
+``` {r 2BKFigure, echo=F, fig.cap="10-fold cross-validated average errors for various values of K"}
+CV_Grid %>%
+  mutate(IsMin = (AverageError == min(CV_Grid$AverageError))) %>% 
+  ggplot( aes(K, AverageError, ymin=AverageError-Std_Err, ymax=AverageError+Std_Err)) +
+  geom_errorbar(aes(color="#858585")) +
+  geom_line() +
+  geom_point(aes(color=IsMin)) +
+  scale_color_manual(values=c("#858585", "black", "green")) +
+  labs(title = "Optimal K for KNN model", y = "Average RMSE") +
+  theme(legend.position="none")
+
+```
+This gives us an optimal K value of `r OptimalK` which yields an RMSE of `r Err_KNN %>% round(2)`. Notably, these are based on the same folds as the baseline model above, so the values are directly comparable. The net RMSE change $RMSE_{KNN} - RMSE_{Baseline} =$ `r round(Err_KNN - Err_Baseline, 2)`.
+
+### Comparison
+
+Both the lasso and the KNN model are performing better than the baseline model in class; the only remaining question is which model performs *best*. In this case, the lasso model is substantially better, with an RMSE change of $RMSE_{Lasso}-RMSE_{KNN} =$ `r round(Err_Lasso - Err_KNN, 2)`. Our clear and stable performance is then $RMSE_{Baseline} > RMSE_{KNN} > RMSE_{Lasso}$. Of course, this is only one result; to verify that it is stable, we can simply repeat the same test as above multiple times.
+
+```{r, include=F} 
+#Pulled out of subsequent block since this is referenced later
+K_Folds_Rep = 10
+```
+
+```{r StabilityTest, eval=F, include=F, cache=T}
+
+#IMPORTANT: This block generates the data used by the figure in the following chunk. It takes forever to run. 
+#Currently, the eval flag is set to false so it does not run.every time. It saves data into an RDS that is then loaded for subsequent use. This is a more permanent cahce than simply cache=T
+
+#TO GENERATE A NEW FIGURE: simply set eval=T, start knitting, and go get a snack
+
+#When running this, I recommend setting up the parallelism to work properly; something about this is broken in .Rmd (libraries are not getting read in the parallel threads.)
+#This works fine if you copy-paste to a regular .R file and then uncomment cl <-... couplet and the stop() at the end.
+#The required lines to do this are commented out so that, when eval=T, it runs anyway
+
+#cl <- parallel::makeCluster(2)
+#doParallel::registerDoParallel(cl)
+
+foreach(i=1:30, .combine='rbind') %dopar% {
+  
+  
+  SaratogaHouses_Scale_Folds_Rep = crossv_kfold(SaratogaHouses_Scale, k=K_Folds_Rep)
+  
+  #Grabbing a CV RMSE from linear Model
+  lm_Class_Models_Rep = map(SaratogaHouses_Scale_Folds_Rep$train, 
+                        ~lm(price ~ . - pctCollege - sewer - waterfront - landValue - newConstruction, data=.))
+  lm_Class_Errors_Rep = map2_dbl(lm_Class_Models_Rep, SaratogaHouses_Scale_Folds_Rep$test, rmse)
+  
+  #The average error from set of folds
+  RepErr_Baseline = mean(lm_Class_Errors_Rep)
+  
+  SH_X = model.matrix(price ~.-1, data=SaratogaHouses_Scale)
+  SH_Y = SaratogaHouses_Scale$price
+  SH_Lasso_CV = cv.gamlr(SH_X, SH_Y, nfold=K_Folds, verb=T)
+  
+  #The error from an independent set of folds
+  RepErr_Lasso = sqrt(SH_Lasso_CV$cvm[SH_Lasso_CV$seg.min])
+  
+  CV_Grid = foreach(CurrentK=K_Candidates, .combine='rbind') %do% {
+    #Set up the map of each of the folds
+    Models = map(SaratogaHouses_Scale_Folds_Rep$train, ~knnreg(price ~ lotSize + age + landValue + livingArea +bedrooms
+                                                           + fireplaces + bathrooms + rooms + heating
+                                                           + fuel + waterfront + newConstruction + centralAir,
+                                                           k=CurrentK, data = ., use.all=FALSE))
+    #Calculate the errors with a map of two inputs, double out
+    Errors = map2_dbl(Models, SaratogaHouses_Scale_Folds_Rep$test, modelr::rmse)
+
+    c(K=CurrentK, AverageError = mean(Errors), Std_Err = sd(Errors)/sqrt(K_Folds))
+  } %>% as.data.frame #turns out stack of vectors from .combine into a data frame
+  
+  #Error from the best K on this set of folds
+  RepErr_KNN = min(CV_Grid$AverageError)
+  
+  c(Iteration = i, Error_LM = RepErr_Baseline, Error_Lasso = RepErr_Lasso, Error_KNN = RepErr_KNN)
+  
+} %>% as.data.frame %>% saveRDS(file="./HW2_StabilityGrid.RDS")
+
+#parallel::stopCluster(cl)
+
+```
+
+``` {r StabilityFigure, echo=F, fig.cap="The average RMSE here is given by calculating the RMSE for each of 10 folds of the data (9 in, 1 out) and averaging the ten sets together. This is repeated 30 times with different folds; each fold is constant throughout the iteration. This shows clearly the difference between the models is non-trivial and constant."}
+
+StabilityGrid = readRDS(file="./HW2_StabilityGrid.RDS") #Call saved line
+
+#note that putting color inside the aes() allows it to appear in the legend
+ggplot(StabilityGrid, aes(Iteration)) +
+  geom_point(aes(y=Error_LM, color="Baseline")) +
+  geom_line(aes(y=Error_LM, color="Baseline")) +
+  geom_point(aes(y=Error_KNN, color="KNN")) +
+  geom_line(aes(y=Error_KNN, color="KNN")) +
+  geom_point(aes(y=Error_Lasso, color="Lasso")) +
+  geom_line(aes(y=Error_Lasso, color="Lasso")) +
+  scale_color_brewer(type="qual", palette=2) +
+  labs(title=glue("Average RMSE over {K_Folds_Rep} Folds"), x="Iteration", y="Average RMSE", color="Model")
+
+
+```
+
+# Problem 3
+
+A simple visualization of the data shows some surprising results:
+
+``` {r 3A, echo=F, fig.cap = "This shows the percentage of loans that defaulted for each given credit history. This gives a pretty clear idea of the effect of oversampling defaulted loans on the outcome liklihood."}
+Credit %>%
+  group_by(history) %>%
+  summarize(DefaultProp = sum(Default==1)/n()) %>%
+  ggplot(aes(history, DefaultProp)) +
+  geom_col(aes(fill=history)) +
+  scale_fill_brewer(type="qual", palette=2) +
+  labs(title="Default Percentage by Credity History",
+       x="Credit History", y="Percentage of Defaults", fill="History")
+```
+
+With a binomial regression we can get an idea of the individual effects of each variable on the default likelihood. From the regression of $Default =\beta_0 + \beta_1 duration + \beta_2 amount + \beta_3 installment + \beta_4 age + \beta_5 history + \beta_6 purpose + \beta_7 foreign$ we get obtain the coefficients:
+
+``` {r 3B, echo=F}
+
+DefaultModel = glm(Default ~ duration + amount + installment + age + history + purpose + foreign, data = Credit, family="binomial")
+KTable = coef(summary(DefaultModel))
+rownames(KTable) <- c("Intercept", "Duration", "Amount", "Installment", "Age", "History: Poor",
+                      "History: Terrible", "Purpose: Education", "Purpose: Goods/Repair", "Purpose: New Car",
+                      "Purpose: Used Car", "Foreign: No")
+KTable %>% as.data.frame %>% select(Estimate) %>% round(2) %>% knitr::kable("simple", col.names="Coefficients")
+
+```
+
+Obviously, the interesting point of note is the reduced likelihood to default given a poor or terrible credit history. This might seem weird, but is the inevitable result of the over sampled defaults in the data set. Since they sample the defaulted loans then matched them with similar loans, you can imagine that there are a ton of loans that were obviously not going to default included, and a substantial number of them are held by debtors with a good credit history. This would result in an inflated chance of defaulting for those groups and a relatively deflated chance for those with better chances of defaulting initially. 
+
+# Problem 4
+## Model Building
+
+``` {r DataSetup, include=FALSE}
+
+#Model Building
+
+#Splitting the data for basic glm() stuff
+TrainFrac = 0.8
+
+#Because I am an idiot, I do this to set up my train/test to be identical when I make them into matrices
+#This is mainly because gamlr works on matrices not dataframes
+#This introduces the problem of wild inconsistency in dropped/retained indicators built from factors by model.matrix
+#SO in lieu of being able to enforce consistency there (which seems impossible) We INSTEAD flag each data set with the appropriate train/test/val ID
+#Then we run a SINGLE model.matrix() on the whole shebang and then redivide it after that.
+#This is definitley not right but... it works
+
+Hotels_Dev %<>% mutate(id=row_number())
+Hotels_Dev_Assignments = Hotels_Dev %>% slice_sample(prop=TrainFrac) %>% mutate(SetID = "Train") %>% select(id, SetID)
+Hotels_Dev %<>% merge(Hotels_Dev_Assignments, by.x="id", all.x=T) %>% select(!id)
+Hotels_Dev$SetID[is.na(Hotels_Dev$SetID)] <- "Test"
+
+Hotels_Val %<>% mutate(SetID = "Val") #Add in SetID
+Hotels_Dev %<>% rbind(Hotels_Val) #Put Val and Dev together. This is immediatley ignored for GLM models
+
+#Add two engineered variables: ArrivalWDay for the day of week they arrive on and ArrivedWeekend which is true if they arrived on Friday or Saturday
+Hotels_Dev %<>% mutate(ArrivalWDay = wday(arrival_date, label=TRUE), ArrivedWeekend = (ArrivalWDay %in% c("Fri", "Sat")))
+
+Hotels_Dev_Train = Hotels_Dev %>% filter(SetID == "Train") %>% select(!SetID)
+Hotels_Dev_Test = Hotels_Dev %>% filter(SetID == "Test") %>% select(!SetID)
+Hotels_Dev_Val = Hotels_Dev %>% filter(SetID == "Val") %>% select(!SetID) #This is technically redundant but I do it for symmetry later. If anything, it's useful to understand the code above
+
+
+
+#Setting up the model matrices for the relevant data
+HD_X_Full = model.matrix(children ~ SetID-1+(.-arrival_date)^2, data=Hotels_Dev)
+#colnames(HD_X_Full) #it SEEMS that SetIDTrain and SetIDVal are the two that consistently come through, thank *god*
+
+HD_Y_Full = Hotels_Dev_Train$children
+
+#These four lines are most of the magic. What I am doing is taking the full model matrix
+#Grabbing only the columns where SetID has the appropriate value, then dropping SetID from the matrix
+
+HD_X_Train = HD_X_Full[HD_X_Full[, "SetIDTrain"] == 1,] %>% #Grab the rows where the value of column SetIDTrain==1
+  subset(select=-c(get("SetIDTrain"), get("SetIDVal"))) #Drop SetIDTrain & Val
+
+HD_X_Test = HD_X_Full[((HD_X_Full[, "SetIDTrain"] == 0) & (HD_X_Full[, "SetIDVal"] == 0)),] %>% #Grab the rows where the value of column SetIDTrian & SetIDVal == 0
+  subset(select=-c(get("SetIDTrain"), get("SetIDVal"))) #Drop SetIDTrain & Val
+
+HD_X_Val = HD_X_Full[HD_X_Full[, "SetIDVal"] == 1,] %>% #Grab the rows where the value of column SetIDVal==1
+  subset(select=-c(get("SetIDTrain"), get("SetIDVal"))) #Drop SetIDTrain & Val
+
+
+#After the above we have three matrices of identical columns and on the same train/test/val as the dataframes for glm
+
+#Generating matching Y
+HD_Y_Train = Hotels_Dev %>% filter(SetID == "Train") %>% select(children)
+HD_Y_Test = Hotels_Dev %>% filter(SetID == "Test") %>% select(children)
+HD_Y_Val = Hotels_Dev %>% filter(SetID == "Val") %>% select(children)
+
+#To check dimensions:
+# dim(HD_X_Train)
+# dim(HD_X_Test)
+# dim(HD_X_Val)
+# dim(HD_Y_Train)
+# dim(HD_Y_Test)
+# dim(HD_Y_Val)
+
+#By this point, our data sets are now all set up. We have 6 matrices; a _train _test and _val for X and Y; 
+#the corresponding dataframes are Hotels_Dev_[train/test/val]
+#The fact that the _Dev_ and HD_ are now meaningless naming schemes is not forgotten, it is simply ignored
+```
+
+
+```{r ModelTrain, include=FALSE}
+#Given Baselines
+HD_Baseline_1 = glm(children ~ market_segment + adults + customer_type + is_repeated_guest, data = Hotels_Dev_Train, family = 'binomial')
+HD_Baseline_2 = glm(children ~ .-arrival_date-ArrivalWDay-ArrivedWeekend, data=Hotels_Dev_Train, family="binomial") #Makes sure to pull out the two engineered variables
+
+#This is a linear model generated by running cv.gamlr() on all of the non-arrival-date values a bunch of times and then picking a reasonable set. 
+#This is the best I could accomplish with no pairwise interactions
+HD_CustomModel = glm(children ~ hotel + stays_in_weekend_nights + adults + meal + market_segment + distribution_channel + 
+  is_repeated_guest + previous_bookings_not_canceled +
+  reserved_room_type + booking_changes + customer_type + 
+    average_daily_rate + total_of_special_requests + ArrivalWDay + ArrivedWeekend, data=Hotels_Dev_Train, family='binomial')
+
+#Finally, a Lasso on all single and pairwise interactions
+HD_Lasso = cv.gamlr(HD_X_Train, HD_Y_Train, nfold=12, family='binomial')
+
+#To see the non0 variables
+# HD_Lasso %>% 
+#   coef() %>% as.matrix %>% as.data.frame %>% 
+#   filter(., select(., matches(colnames(.))) != 0)
+```
+
+There are four models of interest here; two baseline models that are given (referred to as baseline 1 and baseline 2) and then a generalized linear model built with a collection of single variables, no interactions, that is the result of several iterations of model building; this model is referred to as "Custom" in all of the figures. The Custom model also includes two engineered features: $ArrivalWDay$, a collection of indicators for the day of the week of the arrival and an additional indicator, $ArrivedWeekend$ for whether the arrival was on a Friday or a Saturday. This variable is helpful, presumably because couples with children are less likely to be travelling during the week than business travelers. Finally, there is a model generated by a lasso regression on all single and pairwise interactions, including engineered features, in the model except for the arrival date; this model is referred to as "Lasso" in the figures and tables. The lasso model is notably larger than any of the other models in our set, with `r HD_Lasso %>% coef() %>% as.matrix %>% as.data.frame %>% filter(., select(., matches(colnames(.))) != 0) %>% count() %>% pull(1)` coefficients being considered.
+
+Our first goal is to train these models on a standard train/test split built without using our valuation data. We can generate an accuracy by calculating the number of correct categorizations over the total possible answers.
+
+```{r ModelEval0, echo=FALSE, fig.cap="Accuracy Rate (Correct Guesses by Total Guesses) of each model, as evaluated on the 20% testing set, not the valuation set"}
+#What's the baseline?
+NullAcc = (Hotels_Dev_Test %>% summarize((n()-sum(children))/n())) %>% round(4) #1-sum/n is the percentage of guests without children
+
+#The Basline 1 Model
+HD_Phat_Baseline_1 = predict(HD_Baseline_1, Hotels_Dev_Test, type='response')
+HD_Yhat_Baseline_1 = ifelse(HD_Phat_Baseline_1 >0.5, 1, 0) %>% factor(levels=c(0,1)) #Force square tables
+B1_Confusion = table(Hotels_Dev_Test$children, HD_Yhat_Baseline_1)
+#B1_Confusion #confusion matrix
+B1_Acc = (sum(diag(B1_Confusion))/sum(B1_Confusion)) %>% round(4) #Accuracy
+
+#The baseline 2 model
+HD_Phat_Baseline_2 = predict(HD_Baseline_2, Hotels_Dev_Test, type='response')
+HD_Yhat_Baseline_2= ifelse(HD_Phat_Baseline_2 >0.5, 1, 0) %>% factor(levels=c(0,1)) #Force square tables
+B2_Confusion = table(Hotels_Dev_Test$children, HD_Yhat_Baseline_2)
+#B2_Confusion #confusion matrix
+B2_Acc = (sum(diag(B2_Confusion))/sum(B2_Confusion)) %>% round(4) #Accuracy
+
+#The custom model
+HD_Phat_Custom = predict(HD_CustomModel, Hotels_Dev_Test, type='response')
+HD_Yhat_Custom= ifelse(HD_Phat_Custom >0.5, 1, 0) %>% factor(levels=c(0,1)) #Force square tables
+Custom_Confusion = table(Hotels_Dev_Test$children, HD_Yhat_Custom)
+#Custom_Confusion #confusion matrix
+Custom_Acc = (sum(diag(Custom_Confusion))/sum(Custom_Confusion)) %>% round(4) #Accuracy
+
+#Hey FUCK this shit
+HD_Phat_Lasso = predict(HD_Lasso$gamlr, newdata=HD_X_Test, type='response')
+HD_Yhat_Lasso = ifelse(HD_Phat_Lasso >0.5, 1, 0) %>% factor(levels=c(0,1)) #Force square tables
+Lasso_Confusion = table(Hotels_Dev_Test$children, HD_Yhat_Lasso)
+#Lasso_Confusion #confusion matrix
+Lasso_Acc = (sum(diag(Lasso_Confusion))/sum(Lasso_Confusion)) %>% round(4) #Accuracy
+
+
+AccList = c(NAcc=NullAcc, Baseline1=B1_Acc, Baseline2=B2_Acc, Custom=Custom_Acc, Lasso=Lasso_Acc) %>% as.matrix
+rownames(AccList) <- c("Null Model", "Baseline 1", "Baseline 2", "Custom", "Lasso")
+knitr::kable(AccList, "simple", col.names = "Accuracy")
+
+```
+
+On this test/train split, the Baseline 2 and the Baseline 1 model are performing very similarly; this is not surprising since there is very little difference between the two models. The Baseline 1 model is performing identically to the null model: at threshold $t=0.5$ the Baseline 1 model predicts no children at all, so it is identically the null. The Lasso is performing slightly worse than the other two model on the test set, but the difference is small, so it is unclear if this is due to the lasso not producing a good model in this case, or if the Custom model is over fit for the train data.
+
+After training and initially evaluating out models, we can begin on our evaluation data. To pick a functional threshold we can look to the ROC curves seen in the ROC Curve graph
+
+``` {r ModelEval1, echo=FALSE, fig.cap  = "ROC Curve by Model, FPR is calulated as the rate of incorrect positive gueses over total true negatives. TPR is the amount of correct positive guesses over total true positives. Each point represents a different threshold used for calculation; there are 1000 thresholds evenly distributed between 0 and 1."}
+
+#Step 1: Get phat. This is pre-calced since it does not depend on threshold
+ValPred_Phat_Baseline_1 = predict(HD_Baseline_1, Hotels_Dev_Val, type='response')
+ValPred_Phat_Baseline_2 = predict(HD_Baseline_2, Hotels_Dev_Val, type='response')
+ValPred_Phat_Custom = predict(HD_CustomModel, Hotels_Dev_Val, type='response')
+ValPred_Phat_Lasso = predict(HD_Lasso, HD_X_Val, type='response')
+
+#Get the true values. Force the levels of the factor to include the full range so that the table is square
+Val_True = Hotels_Dev_Val$children %<>% factor(levels=c(0,1))
+
+#Confusion matrix legend: 
+#[1] is Real 0/Pred 0 
+#[2] is Real 1/Pred 0 
+#[3] is Real 0/Pred 1
+#[4] is Real 1/Pred 1
+#FPR = [3]/([3]+[1])
+#TPR = [4]/([4]+[2])
+
+TMax = 1000 #Number of thresholds to test. This will be evenly distributed in (0,1)
+#Expect ROCMeasurements to be 4*TMax observations
+
+
+#Loop through and generate a confusion matrix for each model. Then, stack them all and bind each run together
+ROCMeasurements = foreach(TRaw=1:TMax, .combine='rbind') %do%{
+  #Calculate a threshold
+  threshold = TRaw/(TMax+1)
+  #Values for baseline 1 model
+  REP_Yhat_Baseline_1 = ifelse(ValPred_Phat_Baseline_1 > threshold, 1, 0) #Generate predictions
+  REP_Yhat_Baseline_1 %<>% factor(levels=c(0,1)) #Ensure the output table has both columns, even if one is empty
+  REP_Confusion_B1 = table(Hotels_Dev_Val$children, REP_Yhat_Baseline_1) #Grabs the confusion matrix
+  REP_B1_FPR = REP_Confusion_B1[3]/(REP_Confusion_B1[3]+REP_Confusion_B1[1])
+  REP_B1_TPR = REP_Confusion_B1[4]/(REP_Confusion_B1[4]+REP_Confusion_B1[2])
+  
+  #Baseline 2
+  REP_Yhat_Baseline_2 = ifelse(ValPred_Phat_Baseline_2 > threshold, 1, 0) #Generate predictions
+  REP_Yhat_Baseline_2 %<>% factor(levels=c(0,1)) #Ensure the output table has both columns, even if one is empty
+  REP_Confusion_B2 = table(Hotels_Dev_Val$children, REP_Yhat_Baseline_2) #Grabs the confusion matrix
+  REP_B2_FPR = REP_Confusion_B2[3]/(REP_Confusion_B2[3]+REP_Confusion_B2[1])
+  REP_B2_TPR = REP_Confusion_B2[4]/(REP_Confusion_B2[4]+REP_Confusion_B2[2])
+  
+  #Custom Model
+  REP_Yhat_Custom = ifelse(ValPred_Phat_Custom > threshold, 1, 0) #Generate predictions
+  REP_Yhat_Custom %<>% factor(levels=c(0,1)) #Ensure the output table has both columns, even if one is empty
+  REP_Confusion_Custom = table(Hotels_Dev_Val$children, REP_Yhat_Custom) #Grabs the confusion matrix
+  REP_Custom_FPR = REP_Confusion_Custom[3]/(REP_Confusion_Custom[3]+REP_Confusion_Custom[1])
+  REP_Custom_TPR = REP_Confusion_Custom[4]/(REP_Confusion_Custom[4]+REP_Confusion_Custom[2])
+  
+  #Lasso
+  REP_Yhat_Lasso = ifelse(ValPred_Phat_Custom > threshold, 1, 0) #Generate predictions
+  REP_Yhat_Lasso %<>% factor(levels=c(0,1)) #Ensure the output table has both columns, even if one is empty
+  REP_Confusion_Lasso = table(Hotels_Dev_Val$children, REP_Yhat_Lasso) #Grabs the confusion matrix
+  REP_Lasso_FPR = REP_Confusion_Lasso[3]/(REP_Confusion_Lasso[3]+REP_Confusion_Lasso[1])
+  REP_Lasso_TPR = REP_Confusion_Lasso[4]/(REP_Confusion_Lasso[4]+REP_Confusion_Lasso[2])
+  
+  rbind(c(FPR = REP_B1_FPR, TPR = REP_B1_TPR, t=threshold, model="Baseline 1"),
+        c(FPR = REP_B2_FPR, TPR = REP_B2_TPR, t=threshold, model="Baseline 2"),
+        c(FPR = REP_Custom_FPR, TPR = REP_Custom_TPR, t=threshold, model="Custom"),
+        c(FPR = REP_Lasso_FPR, TPR = REP_Lasso_TPR, t=threshold, model="Lasso"))
+
+
+} %>% as.data.frame() %>% mutate(FPR = as.numeric(FPR), TPR = as.numeric(TPR), t=as.numeric(t), model=factor(model))
+#Finally, we cast it to useful formats (instead of all strings)
+
+ggplot(ROCMeasurements, aes(FPR, TPR, color=model)) +
+  geom_line() +
+  geom_point(size=0.1, alpha=0.3) +
+  facet_wrap(~model) +
+  scale_color_brewer(type="qual", palette = 2) +
+  labs(title="ROC Curve for Each Model", color="Model")
+
+```
+
+
+```{r ModelEval2A, include=FALSE}
+#MODEL VALIDATION STEP 2
+
+
+#Setting up folds
+FoldNumber = 20
+#A data frame that matches each ID to a fold ID in [1,20] 
+Hotels_ValFolds = Hotels_Dev_Val %>% mutate(RowID = row_number()) %>% shuffle() %>%
+  mutate(FoldID = (row_number()%%FoldNumber)+1) %>% select(RowID, FoldID) %>% arrange(RowID)
+
+#Add the column to matched rows
+Hotels_Dev_Val_WithFolds = Hotels_Dev_Val %>%
+  mutate(RowID = row_number()) %>%
+  merge(., Hotels_ValFolds) %>%
+  select(!RowID)
+
+#Again, Add the column to matched rows, but this time we do some extra casting for diply access
+HD_X_Val_WithFolds = HD_X_Val %>% as.data.frame() %>%
+  mutate(RowID = row_number()) %>%
+  merge(Hotels_ValFolds) %>%
+  select(!RowID) %>% as.matrix
+HD_Y_Val_WithFolds = HD_Y_Val %>% as.data.frame() %>%
+  mutate(RowID = row_number()) %>%
+  merge(Hotels_ValFolds) %>%
+  select(!RowID) %>% as.matrix
+
+#Checking the dimensions. Optimally, there is one extra column in each
+# dim(HD_X_Val)
+# dim(HD_X_Val_WithFolds)
+# dim(HD_Y_Val)
+# dim(HD_Y_Val_WithFolds)
+
+#Arbitrarily, we are going to chose our acceptable FPR based on eyeballing graphs and then grab the t closest to that number
+FPRChoice = 0.35
+threshold = ROCMeasurements %>% filter(model=="Lasso") %>% 
+  mutate(NearTPRChoice = abs(FPR-FPRChoice)) %>% 
+  arrange(NearTPRChoice) %>% head(1) %>% pull(t)
+
+
+
+
+GetThreshold <- function(Choice, ROCs) {
+  ROCs %>% filter(model=="Lasso") %>% 
+  mutate(NearFPRChoice = abs(FPR-Choice)) %>% 
+  arrange(NearFPRChoice) %>% head(1) %>% pull(t) %>% return
+}
+
+MakePredictions <- function(FPR, ROCs) {
+  FPRChoice = FPR
+  threshold = GetThreshold(FPRChoice, ROCs)
+  
+  
+  ReturnVal = foreach(FNum=1:FoldNumber, .combine='rbind') %do% {
+    
+    Hotels_Val_ThisFold= Hotels_Dev_Val_WithFolds %>% filter(FoldID == FNum) %>% select(!FoldID)
+    HD_X_Val_ThisFold = HD_X_Val_WithFolds[HD_X_Val_WithFolds[, "FoldID"] == FNum,] %>% #Grab the rows where the FoldID matches FNum
+      subset(select=-c(get("FoldID"))) #Drop FoldID
+    
+    #Predictions for Each Model
+    FoldPred_Phat_Baseline_1 = predict(HD_Baseline_1, Hotels_Val_ThisFold, type='response')
+    FoldPred_Phat_Baseline_2 = predict(HD_Baseline_2, Hotels_Val_ThisFold, type='response')
+    FoldPred_Phat_Custom = predict(HD_CustomModel, Hotels_Val_ThisFold, type='response')
+    FoldPred_Phat_Lasso = predict(HD_Lasso$gamlr, HD_X_Val_ThisFold, type='response')
+    
+    #Values for baseline 1 model
+    FoldPred_Yhat_Baseline_1 = ifelse(FoldPred_Phat_Baseline_1 > threshold, 1, 0) #Generate predictions
+    FoldPred_N_Baseline_1 = sum(as.numeric(FoldPred_Yhat_Baseline_1)) #Total the predicted number of children as.numeric is due to R treating all 0s or all 1s as a factor. Thanks R!
+    
+    #Baseline 2
+    FoldPred_Yhat_Baseline_2 = ifelse(FoldPred_Phat_Baseline_2 > threshold, 1, 0) #Generate predictions
+    FoldPred_N_Baseline_2 = sum(as.numeric(FoldPred_Yhat_Baseline_2)) #Total the predicted number of children
+  
+    
+    #Custom Model
+    FoldPred_Yhat_Custom = ifelse(FoldPred_Phat_Custom > threshold, 1, 0) #Generate predictions
+    FoldPred_N_Custom = sum(as.numeric(FoldPred_Yhat_Custom)) #Total the predicted number of children
+  
+    
+    #Lasso
+    FoldPred_Yhat_Lasso = ifelse(FoldPred_Phat_Lasso > threshold, 1, 0) #Generate predictions
+    FoldPred_N_Lasso = sum(FoldPred_Yhat_Lasso) #Total the predicted number of children
+  
+    #Finally, the number of children actually in this fold
+    FoldPred_RealChildren = Hotels_Val_ThisFold %>% filter(children==1) %>% summarize(Childnum = n()) %>% .$Childnum
+    
+    rbind(c(FoldID = FNum, Model=  "Actual", Prediction = FoldPred_RealChildren, Miss= 0),
+          c(FoldID = FNum, Model = "Null", Prediction = 0, Miss= -FoldPred_RealChildren),
+          c(FoldID = FNum, Model=  "Baseline 1", Prediction = FoldPred_N_Baseline_1, Miss= FoldPred_N_Baseline_1-FoldPred_RealChildren),
+          c(FoldID = FNum, Model=  "Baseline 2", Prediction = FoldPred_N_Baseline_2, Miss= FoldPred_N_Baseline_2-FoldPred_RealChildren),
+          c(FoldID = FNum, Model=  "Custom", Prediction = FoldPred_N_Custom, Miss= FoldPred_N_Custom-FoldPred_RealChildren),
+          c(FoldID = FNum, Model=  "Lasso", Prediction = FoldPred_N_Lasso, Miss= FoldPred_N_Lasso-FoldPred_RealChildren))
+    
+  } %>% as.data.frame %>%
+    #We want everything to be numeric where appropriate
+    mutate(FoldID = as.numeric(FoldID), 
+           Model = factor(Model, levels=c("Actual", "Null", "Baseline 1", "Baseline 2", "Custom", "Lasso")), #levels inserted to force ggplot to color consistently
+           Prediction = as.numeric(Prediction), 
+           Miss=as.numeric(Miss))
+  return(ReturnVal) 
+}
+
+FirstFPR = 0.25
+FoldPredictions = MakePredictions(FirstFPR, ROCMeasurements)
+FirstThreshold = GetThreshold(FirstFPR, ROCMeasurements)
+```
+
+Interestingly, the Baseline 1 produces almost no correct guesses at all, regardless of the threshold. Each of the points visible on these curves represents a different threshold value, so in addition to the steep line, we can clearly see that there are no accurate thresholds. The other ROC curves are very similar to one another, so choosing a threshold for this model should not require to many judgment decisions. In this case, we choose the threshold that gives us the nearest FPR to `r FirstFPR` since that seems to be a sound middle ground; this results in a threshold of `r FirstThreshold`. The following results do not substantially change for a number of thresholds around that choice.
+
+We can then split our valuation data into 20 folds and predict the number of visits with children for each of those groups, then compare that to the actual number of visits in each of the groups. By doing this we can generate a "miss number", how many children we are off for a given number of visits.
+
+```{r ModelEval2B, echo=FALSE, fig.cap="This gives the number of misses by fold. Misses are calculated as the predicted number minus the true number of visits with children. A negative value indicates too few predicted children, a positive number indicates too many predicted children."}
+
+FoldPredictions %>% filter(Model != "Actual") %>%
+  ggplot(aes(FoldID, Miss, color=Model)) +
+  geom_point() +
+  geom_line() +
+  geom_hline(linetype="dashed", size=1.2, aes(yintercept=0, color="Target")) +
+  scale_color_brewer(type="qual", palette = 3) +
+  labs(title="Miss Value of Each Fold", x="Fold")
+
+```
+
+This draws a pretty clear relationship between the models. The Lasso model is performing extremely well compared to the others, whereas the Baseline 2 and Custom model, though both are worse than the null model. The only difference is that they over predict where the null model (by design) under predicts. The Baseline 1 model substantially worse here than any other model, including not guessing at all.
+
+```{r ModelEval2C, echo=FALSE, fig.cap="The average number of misses for each model. The lasso with pairwise interactions is clearly the best performer here."}
+
+FoldPredictions %>%
+  filter(Model != "Actual") %>%
+  group_by(Model) %>% 
+  summarize(AvgMiss = mean(Miss)) %>%
+  ggplot(aes(Model, AvgMiss, fill=Model, label=AvgMiss)) %>% +
+  geom_col() +
+  geom_text(vjust=-.5) +
+  scale_fill_brewer(type="qual", palette = 3) +
+  labs(title="Average Miss Values", x="Model", y="Average Miss")
+
+```
+
+```{r ModelEval2D, include=FALSE}
+SecondFPR = 0.215
+SecondThreshold = GetThreshold(SecondFPR, ROCMeasurements)
+```
+
+The average miss value tells the clearest story of all; the lasso model is clearly the best performing of all the models; the other models are actually worse than simply guessing no children will be present. The most notable part of this is that we have not chosen a threshold that is particularly favorable to the lasso, relative to other models. If we choose the particular value of acceptable false positives such that the Lasso is the most accurate possible (instead of some more situationally appropriate rate) we can use $FPR =$ `r SecondFPR` to get a threshold of `r SecondThreshold`. By doing this we can achieve a very low miss rate for the lasso, though we do not get significantly better for the other models. Note that in order to do this we only have to shift our acceptable false positive rate by `r SecondFPR-FirstFPR` and our threshold by `r SecondThreshold - FirstThreshold`.
+
+```{r ModelEval2E, echo=FALSE, fig.cap="This shows the average miss values if we choose our threshold to intentionally minimize the miss values for the Lasso"}
+MakePredictions(SecondFPR, ROCMeasurements) %>%
+  filter(Model != "Actual") %>%
+  group_by(Model) %>% 
+  summarize(AvgMiss = mean(Miss)) %>%
+  ggplot(aes(Model, AvgMiss, fill=Model, label=AvgMiss)) %>% +
+  geom_col() +
+  geom_text(vjust=-.5) +
+  scale_fill_brewer(type="qual", palette = 3) +
+  labs(title="Average Miss Values, Lasso Miss Minimized", x="Model", y="Average Miss")
+```
+
+So, in conclusion, a lasso-fitted model on all single variables and pairwise interactions is the clearly best performer and, depending on the situation of the actual model, it is possible that it is incredibly accurate.
