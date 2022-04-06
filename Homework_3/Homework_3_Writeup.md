@@ -71,9 +71,9 @@ itself for future models, which prove relatively unresponsive to feature
 engineering. Using the same formula, we can also build a random forest
 model and a gradient-boosted model.
 
--   The basic tree has an RMSE of 1.0365773
--   The random forest model has an RMSE of 0.9780745
--   The gradient-boosted model has an RMSE of 1.0165364
+-   The basic tree has an RMSE of 1.0515126
+-   The random forest model has an RMSE of 1.0100937
+-   The gradient-boosted model has an RMSE of 1.0340146
 
 ### Partial Dependence Graphs
 
@@ -110,6 +110,11 @@ we have no employment growth data for the Lasso model only. This is not
 ideal, for obvious reasons, but is required by some technical
 limitations.
 
+For this problem, we also scale all of our data (except dummy variables)
+by 2 standard deviations. This is mainly to regularize weights for the
+KNN model, but also to make interperetation of the results somewhat
+easier along the way.
+
 We also want to preserve a chunk of data for the last few steps of this
 problem as a sanity check, so 20% of our dataset is reserved as a
 validation set.
@@ -123,7 +128,7 @@ we regress *R**e**v**e**n**u**e**P**e**r**S**q*.*F**t*.*Y**e**a**r* on
 *S**i**z**e* + \[*A**g**e*+*R**e**n**o**v**a**t**i**o**n*+*A**g**e*\**R**e**n**o**v**a**t**i**o**n*\] + *C**l**a**s**s*<sub>*A*</sub> + *C**l**a**s**s*<sub>*B*</sub> + *G**r**e**e**n**R**a**t**i**n**g* + \[*N**e**t*+*E**l**e**c**t**r**i**c**i**t**y**C**o**s**t**s*+*G**a**s**C**o**s**t**s*+*E**l**e**c**t**r**i**c**i**t**y**C**o**s**t**s*\**N**e**t*+*G**a**s**C**o**s**t**s*\**N**e**t*+*E**l**e**c**t**r**i**c**i**t**y**C**o**s**t**s*\**G**a**s**C**o**s**t**s*\] + *C**i**t**y**M**a**r**k**e**t**R**e**n**t*.
 We can compare this to an alternative, autoselected model from a Lasso
 regression in which we allow for all pairwise interactions and find an
-RMSE of 11.2912155 for OLS and an RMSE of 9.9248951 for the Lasso
+RMSE of 10.1499773 for OLS and an RMSE of 10.2946042 for the Lasso
 regression. This shows that our linear model is performing pretty well,
 though the Lasso is somewhat better in the situation.
 
@@ -168,7 +173,7 @@ variation in it’s performance. If we consider the random forest as the
 best model, we can further investigate how it is making the predictions.
 Building the model across our entire dataset (instead of averaging the
 K-folds) can yield some impressive results. When validating, we are
-predicting with an error of 8.8904855
+predicting with an error of 7.7588071
 
 We can also see the importance of each variable
 
@@ -194,24 +199,24 @@ The other four features of interest *do* consistently make it into the
 random forest, and we can investigate their partial dependance graphs
 accordingly.
 
-<img src="Homework_3_Writeup_files/figure-markdown_strict/PD:Age-1.png" alt="The partial effect on age suggests that, as buildings get older, their revenue drops."  />
+<img src="Homework_3_Writeup_files/figure-markdown_strict/PDAge-1.png" alt="The partial effect on age suggests that, as buildings get older, their revenue drops."  />
 <p class="caption">
 The partial effect on age suggests that, as buildings get older, their
 revenue drops.
 </p>
 
-<img src="Homework_3_Writeup_files/figure-markdown_strict/PD:Reno-1.png" alt="Renovating a building seems to help some at the margin"  />
+<img src="Homework_3_Writeup_files/figure-markdown_strict/PDReno-1.png" alt="Renovating a building seems to help some at the margin"  />
 <p class="caption">
 Renovating a building seems to help some at the margin
 </p>
 
-<img src="Homework_3_Writeup_files/figure-markdown_strict/PD:CMR-1.png" alt="Higher market rent is a strong predictor, and obviously rises the expected returns"  />
+<img src="Homework_3_Writeup_files/figure-markdown_strict/PDCMR-1.png" alt="Higher market rent is a strong predictor, and obviously rises the expected returns"  />
 <p class="caption">
 Higher market rent is a strong predictor, and obviously rises the
 expected returns
 </p>
 
-<img src="Homework_3_Writeup_files/figure-markdown_strict/PD:Amen-1.png" alt="Having amenities also seems to increase revenue somewhat"  />
+<img src="Homework_3_Writeup_files/figure-markdown_strict/PDAmen-1.png" alt="Having amenities also seems to increase revenue somewhat"  />
 <p class="caption">
 Having amenities also seems to increase revenue somewhat
 </p>
@@ -229,8 +234,8 @@ outperform the other models. We can see this clearly by simply building
 our model both with and without the longitude and lattitude.
 
 The simple model, which does not have a the houses location, has an OOS
-RMSE of 6.779426^{4}. The complex model, which does use the houses
-location, has an OOS RMSE of 5.3588719^{4}. The vast differences in the
+RMSE of 6.4604001^{4}. The complex model, which does use the houses
+location, has an OOS RMSE of 4.943735^{4}. The vast differences in the
 error is due to the ability of the random forest to make use of the
 chaotically-distributed important locations within California.
 

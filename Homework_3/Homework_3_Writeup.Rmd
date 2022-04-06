@@ -279,6 +279,8 @@ When trying to accurately predict the Revenue per square foot year of an apartme
 
 For our basic data preparation and feature engineering, we can take several simple steps to get a fairly straightforward dataset. It does not seem important to consider the two energy certifications seperatley; none of the models we test will have a notable, consistent change in accuracy by doing this. We also drop all of the observations for which we have no employment growth data for the Lasso model only. This is not ideal, for obvious reasons, but is required by some technical limitations.
 
+For this problem, we also scale all of our data (except dummy variables) by 2 standard deviations. This is mainly to regularize weights for the KNN model, but also to make interperetation of the results somewhat easier along the way.
+
 We also want to preserve a chunk of data for the last few steps of this problem as a sanity check, so 20% of our dataset is reserved as a validation set.
 
 To make the simplest model, we could could assume a linear relationship between the various features of an apartment, it does make some sense that each feature would simply add value; there are intuitive and simple interactions when considering this type of model. We are capable of building models by hand that perform fairly well. For this basic model we regress $Revenue Per Sq. Ft. Year$ on $Size+[Age+Renovation+Age*Renovation]+Class_A+Class_B+GreenRating+[Net+ElectricityCosts+GasCosts+ElectricityCosts*Net+GasCosts*Net+ElectricityCosts*GasCosts]+CityMarketRent$. We can compare this to an alternative, autoselected model from a Lasso regression in which we allow for all pairwise interactions and find an RMSE of `r rmse(LinearBasic, GreenBuildings_Val)` for OLS and an RMSE of `r sqrt(GB_Lasso_CV$cvm[GB_Lasso_CV[["seg.min"]]])` for the Lasso regression. This shows that our linear model is performing pretty well, though the Lasso is somewhat better in the situation.
@@ -432,25 +434,25 @@ The most practically-interesting variables to investigate are the age, renovatio
 
 The other four features of interest *do* consistently make it into the random forest, and we can investigate their partial dependance graphs accordingly.
 
-```{r PD:Age, echo=F, fig.cap = "The partial effect on age suggests that, as buildings get older, their revenue drops."}
+```{r PDAge, echo=F, fig.cap = "The partial effect on age suggests that, as buildings get older, their revenue drops."}
 randomForest::partialPlot(GB_RFModel, GreenBuildings_Val, 'age',
                           xlab="Age", ylab="Dependence",
                           main="Partial Dependence of Age on Revenue per Square Ft. Year")
 ```
 
-```{r PD:Reno, echo=F, fig.cap = "Renovating a building seems to help some at the margin"}
+```{r PDReno, echo=F, fig.cap = "Renovating a building seems to help some at the margin"}
 randomForest::partialPlot(GB_RFModel, GreenBuildings_Val, 'renovated',
                           xlab="Renovation Status", ylab="Dependence",
                           main="Partial Dependence of Renovation on Revenue per Square Ft. Year")
 ```
 
-```{r PD:CMR, echo=F, fig.cap = "Higher market rent is a strong predictor, and obviously rises the expected returns"}
+```{r PDCMR, echo=F, fig.cap = "Higher market rent is a strong predictor, and obviously rises the expected returns"}
 randomForest::partialPlot(GB_RFModel, GreenBuildings_Val, 'City_Market_Rent',
                           xlab="CMR", ylab="Dependence",
                           main="Partial Dependence of City Market Rent on Revenue per Square Ft. Year")
 ```
 
-```{r PD:Amen, echo=F, fig.cap = "Having amenities also seems to increase revenue somewhat"}
+```{r PDAmen, echo=F, fig.cap = "Having amenities also seems to increase revenue somewhat"}
 randomForest::partialPlot(GB_RFModel, GreenBuildings_Val, 'amenities',
                           xlab="Amenities Status", ylab="Dependence",
                           main="Partial Dependence of Amenities on Revenue per Square Ft. Year")
