@@ -1,0 +1,560 @@
+---
+title: "Homework_2_Writeup"
+author: "Robert Petit"
+date: "3/3/2022"
+output: 
+  md_document : default
+  pdf_document : 
+    extra_dependencies: ["float"]
+knit: (function(inputFile, encoding) {
+  rmarkdown::render(inputFile, output_format = "all") })
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(fig.pos = "H", out.extra = "")
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+```
+
+``` {r Preamble, echo=FALSE}
+library(tidyverse) #for wrangling
+library(magrittr)
+library(mosaic) #for wrangling
+library(ggplot2) #for plotting
+library(ggthemes) #to make things pretty
+library(rsample) #for train/test split
+library(caret) #knn
+library(modelr) #knn
+library(foreach) #For loops
+library(gamlr) #lasso
+library(glue) #paste sucks
+library(kableExtra) #more aesthetics
+library(lubridate) #date fun
+library(rpart) #Basic trees
+library(rpart.plot) #Basic tree vis
+library(randomForest) #random forest
+library(gbm) #boosted models
+library(pdp) #partial dependence plots
+library(ggpubr) #for ggarrange
+library(ggmap) #For the maps in part 4
+
+
+theme_set(theme_minimal())
+```
+
+``` {r DataIn, echo=FALSE}
+
+Dengue=read.csv("dengue.csv")
+
+```
+
+# Question 1
+
+### 1
+If you were to simply get data and run a regression of "crime" on "police" what you would learn is how that data tends to move together (it's correlation). This is different from understanding the effect of one on the other since this a basic regression simply does not make any claims about cause or direction of effect.
+
+### 2
+The researchers at UPenn were able to isolate the effect by noticing that the number of police in the city was changed *completley independently* of crime rates whenever the city when on high terror alert. Because of this, any change in crime was either dependent on police, or some part of the error term, which provides the researchers with a wonderful instrumental variable to use in a regression. 
+
+### 3
+Log(Ridership) was added to the regression as a way to look at the number of people out and about on those same days. This is to isolate the effects that these terror alerts may have on the population (especially tourists) in the city, which may suggest that the crime rates are also dependent on the terror alert level in the city, which would correlate the instrument with the error term. 
+
+### 4
+The model being estimated here is a regression of crime on additional (unrelated to crime) police presence, seperated by district, controlling for the number of people in the city. The conclusion is that increases in police presence that are *independent* of crime will *cause* a drop in crime; this result is significant at the 1% level.
+
+# Question 2
+```{r ModelBuilding, include=F}
+Dengue %<>%
+  mutate(logCases = ifelse(total_cases>0, log(total_cases), 0),
+         city = factor(city),
+         season = factor(season))
+
+
+
+Dengue_Split = initial_split(Dengue, prop=.8)
+Dengue_Train = training(Dengue_Split)
+Dengue_Test = testing(Dengue_Split)
+
+########## Tree Model
+Dengue_Tree = rpart(logCases ~ city + season + specific_humidity + tdtr_k + precipitation_amt, data=Dengue_Train)
+Dengue_Tree_Every = rpart(logCases ~ .-total_cases, data=Dengue_Train)
+
+######### Forest
+Dengue_Forest = randomForest(logCases ~ .-total_cases, data=Dengue_Train, importance=T, na.action=na.omit)
+
+######### Gradient boosted model
+Dengue_Boost = gbm(logCases ~ city + season + specific_humidity + tdtr_k + precipitation_amt,
+                   data=Dengue_Train, interaction.depth = 10, n.trees = 300, shrinkage=0.01, cv.folds=6)
+
+```
+
+For these models, we are working with the log-scaled outcomes since they are somewhat more interperetable than simple case numbers. We will build two models for our basic tree, one that relies on the given formula: log(Cases) ~ city + season + specific humidity + average diurnal temperature range + precipitation. For our second model, we will let the tree depend on every variable so that we can observe the difference. 
+
+``` {r Trees_Base, echo=F, fig.cap="The tree view of the given model"}
+rpart.plot(Dengue_Tree, type=4)
+```
+
+
+``` {r Trees_Every, echo=F, fig.cap="The tree view of the wider model. Note here the very slight difference between the two"}
+rpart.plot(Dengue_Tree, type=4)
+```
+
+When looking at these two trees, the only difference between them is the decision the third node relies on; in the case of the second tree the model building substitutes specific humidity with the dew point temperature. As it turns out, these two variables are very closely related. We can see that relation in the data:
+
+```{r SHvDP, echo=F, fig.cap="The relationship between this data is clear to the eye"}
+Dengue%>%
+ggplot(aes(dew_point_temp_k, specific_humidity)) +
+  geom_point() +
+  geom_smooth(color="red", se=F) +
+  labs(title="Specific Humidity by Dew Point Temperature",
+       y="Specific Humidity",
+       x="Dew Point Temperature")
+```
+
+With that difference being considered, we can see very clearly that the given formula captures most of the important data. This pattern repeats itself for future models, which prove relatively unresponsive to feature engineering. Using the same formula, we can also build a random forest model and a gradient-boosted model. 
+
+* The basic tree has an RMSE of `r modelr::rmse(Dengue_Tree, Dengue_Test) %>% unlist`
+* The random forest model has an RMSE of `r modelr::rmse(Dengue_Forest, Dengue_Test) %>% unlist`
+* The gradient-boosted model has an RMSE of `r modelr::rmse(Dengue_Boost, Dengue_Test) %>% unlist`
+
+### Partial Dependence Graphs
+
+The partial dependence graphs for the gradient-boosted model, we can see the various effects of precipitation, humidity, and the season. We can also investigate the cross-dependence of both precipitation and humidity with the season. 
+Quick note: The following graphs are not generated in real time. For some reason, the render engine was not working with pdp::partial(), so these are built off of cached models that may appear slightly different than the other analysis indicates. They are still from identically-built models.
+
+``` {r PDP1, echo=F}
+# 
+# 
+# ######### PDPs
+
+
+#To generate the RDS:
+# pdp::partial(Dengue_Boost,
+#              pred.var="specific_humidity",
+#              n.trees = 300) %>%
+
+readRDS("./PDP1.RDS") %>%
+  ggplot() +
+  geom_line(mapping=aes(specific_humidity, yhat), color="green") +
+  labs(title="Partial Dependence Plot: Specific Humidity",
+       y="Predicted Y",
+       x="Specific Humidity")
+
+```
+
+``` {r PDP2, echo=F}
+
+#To generate the RDS:
+# pdp::partial(Dengue_Boost,
+#              pred.var="precipitation_amt",
+#  n.trees = 300) %>%
+
+readRDS("./PDP2.RDS") %>%
+  ggplot() +
+  geom_line(mapping=aes(precipitation_amt, yhat), color="blue") +
+  labs(title="Partial Dependence Plot: Precipitation Amount",
+       y="Predicted Y",
+       x="Precipitation Amount")
+
+```
+
+``` {r PDP3, echo=F}
+
+#To generate the RDS:
+# pdp::partial(Dengue_Boost,
+#              pred.var="season",
+#              n.trees = 300) %>%
+
+readRDS("./PDP3.RDS") %>%
+  ggplot() +
+  geom_point(mapping=aes(season, yhat, color=season), size=2) +
+  scale_color_brewer(type="qual", palette=2) +
+  labs(title="Partial Dependence Plot: Season",
+       y="Predicted Y",
+       x="Season")
+
+```
+
+``` {r PDP4, echo=F}
+
+#To generate the RDS:
+# pdp::partial(Dengue_Boost,
+#              pred.var=c("specific_humidity", "season"),
+#              n.trees = 300) %>%
+
+readRDS("./PDP4.RDS") %>%
+  ggplot() +
+  geom_line(mapping=aes(specific_humidity, yhat), color="green") +
+  facet_wrap(~season) +
+  labs(title="Partial Dependence Plot: Specific Humidity by Season",
+       y="Predicted Y",
+       x="Specific Humidity")
+
+```
+
+``` {r PDP5, echo=F}
+
+#To generate the RDS:
+# pdp::partial(Dengue_Boost,
+#              pred.var=c("precipitation_amt", "season"),
+#              n.trees = 300) %>%
+
+readRDS("./PDP5.RDS") %>%
+  ggplot() +
+  geom_line(mapping=aes(precipitation_amt, yhat), color="blue") +
+  facet_wrap(~season) +
+  labs(title="Partial Dependence Plot: Precipitation Amount by Season",
+       y="Predicted Y",
+       x="Specific Humidity")
+
+```
+
+# Question 3
+``` {r 3DataIn, include=F}
+# GreenBuildings is the data, with numerics scaled by 2 standard deviations.
+# SourceL Gelman, Statist. Med. 2008; 27:2865–2873
+# (www.interscience.wiley.com) DOI: 10.1002/sim.3107
+# We aren't demeaning because our main goal here is to fix the scale issues for knn etc. 
+# The extra interperetability is a bit of a free lunch here, we're not reaching for it.
+
+# It also includes the following engineered features:
+# Rev_PerSqFtYear is the revenue of each building, per square foot of the building, per year. This is the given outcome of interest
+
+# We drop LEED and Energystar and only use whether or not the building is energy rated. 
+# It doesn't seem to make much substantive difference to observe them separate
+#   perhaps because consumers can't differentiate and the material differences are minimal
+
+
+GreenBuildings = read.csv("greenbuildings.csv") %>%
+  
+  #Engineer our outcome variable then drop the variables it's derived from
+   mutate(Rev_PerSqFtYear = ((leasing_rate*.01)*Rent)) %>% 
+           
+           
+   #Force factors to recognize. This is needed largely because we are going to scale soon and can't screw that up
+   mutate(across(.cols=c(cluster,
+                  renovated,
+                  class_a,
+                  class_b,
+                  LEED,
+                  Energystar,
+                  green_rating,
+                  net,
+                  amenities,),
+          ~factor(.x))) %>%
+  
+  select(!c(leasing_rate, Rent, LEED, Energystar, CS_PropertyID, cluster)) %>%
+  
+  #Finally, we want to scale everything by two standard deviations
+   mutate(across(where(is.numeric) & !Rev_PerSqFtYear,
+                ~scale(.x)*0.5))
+
+
+
+GreenBuildings_Split = initial_split(GreenBuildings, prop=0.8)
+GreenBuildings_Train = training(GreenBuildings_Split)
+GreenBuildings_Val = testing(GreenBuildings_Split)
+
+GB_Lasso = GreenBuildings_Train %>%
+  
+  # We drop the values where empl_gr = NA because this causes problems for Lasso (only)
+  filter(!is.na(empl_gr))
+
+GB_X = model.matrix(Rev_PerSqFtYear ~ (.-1)^2, data=GB_Lasso)
+
+GB_Y = GB_Lasso$Rev_PerSqFtYear %>% as.matrix
+
+```
+
+``` {r BaselineModels, include=F}
+LinearBasic = lm(Rev_PerSqFtYear ~ size + (age + renovated)^2 + class_a + class_b + green_rating +
+                    (net + Electricity_Costs + Gas_Costs)^2 + City_Market_Rent, data=GreenBuildings_Train)
+# rmse(LinearBasic, GreenBuildings_Val)
+
+GB_Lasso_CV = cv.gamlr(GB_X, GB_Y, nfold=10, verb=T)
+#sqrt(GB_Lasso_CV$cvm[GB_Lasso_CV[["seg.min"]]])
+
+```
+When trying to accurately predict the Revenue per square foot year of an apartment complex, there are a number of competing models to pick from. 
+
+For our basic data preparation and feature engineering, we can take several simple steps to get a fairly straightforward dataset. It does not seem important to consider the two energy certifications seperatley; none of the models we test will have a notable, consistent change in accuracy by doing this. We also drop all of the observations for which we have no employment growth data for the Lasso model only. This is not ideal, for obvious reasons, but is required by some technical limitations.
+
+We also want to preserve a chunk of data for the last few steps of this problem as a sanity check, so 20% of our dataset is reserved as a validation set.
+
+To make the simplest model, we could could assume a linear relationship between the various features of an apartment, it does make some sense that each feature would simply add value; there are intuitive and simple interactions when considering this type of model. We are capable of building models by hand that perform fairly well. For this basic model we regress $Revenue Per Sq. Ft. Year$ on $Size+[Age+Renovation+Age*Renovation]+Class_A+Class_B+GreenRating+[Net+ElectricityCosts+GasCosts+ElectricityCosts*Net+GasCosts*Net+ElectricityCosts*GasCosts]+CityMarketRent$. We can compare this to an alternative, autoselected model from a Lasso regression in which we allow for all pairwise interactions and find an RMSE of `r rmse(LinearBasic, GreenBuildings_Val)` for OLS and an RMSE of `r sqrt(GB_Lasso_CV$cvm[GB_Lasso_CV[["seg.min"]]])` for the Lasso regression. This shows that our linear model is performing pretty well, though the Lasso is somewhat better in the situation.
+
+There are two non-linear models we can also investigate, a K-nearest neighbor model and a random forest model. Intuitively, we would expect the random forest to perform quite well, since most people will choose where to live based on their desire for a complex combination of features. For instance, people who desire more space might strongly value amenities at the margin (or never live somewhere without them) so the automatic interaction detection inherent in a random forest is of extreme interest. K-nearest neighbor, however, promises to circumvent some of that complexity by avoiding interactions in general.
+
+While the random forest model does not need to be tuned, the KNN model needs to have it's k selected. Again, searching for stability here, we can test out a number of K values. When doing this, we do not get a consistent answer, often 4 is the best choice but on occasion 2 is slightly better. The biggest confounding fact is that when 2 is bad, it tends to be *very* bad but 4 is never outside of a single standard deviation of 2 so we will use K=4 for the rest of our analysis.
+
+```{r KCount, echo=F, fig.cap="You can see that 4 is, by a wide margin, the most often-chosen best performing K across the models"}
+
+# The following data is generated by this chunk of code. It is another huge chunk of computing, so I've saved a single run of it and simply load that to build.
+
+# K_Candidates = c(2, 4, 6, 8, 10, 15, 20, 25, 30, 35, 40, 45,
+#                  50, 60, 70, 80, 90, 100, 125, 150, 175, 200, 250, 300)
+#
+# This shows that the above method is consistent in selecting 4, with little variation. It takes FOREVER though
+# foreach(i=1:100, .combine='rbind') %dopar% {
+#     ThisK = foreach(CurrentK=K_Candidates, .combine='rbind') %do% {
+#       GB_S_Train_Folds = crossv_kfold(GreenBuildings_Train, k=10)
+#       KNN_Models = map(GB_S_Train_Folds$train, ~knnreg(Rev_PerSqFtYear ~ size +
+#                                                          age + renovated + class_a + class_b + green_rating +
+#                                                          net + Electricity_Costs + Gas_Costs + City_Market_Rent,
+#                                                        k=CurrentK, data=., use.all=FALSE))
+#       Errors = map2_dbl(KNN_Models, GB_S_Train_Folds$test, modelr::rmse)
+#       c(K=CurrentK, AverageError = mean(Errors), Std_Err = sd(Errors)/sqrt(K_Folds))
+#     } %>% as.data.frame %>% arrange(AverageError) %>% head(1) %>% pull(K)
+#     
+#     c(iter = i, K = ThisK)
+# } %>% as.data.frame %>% saveRDS("HW3c_KCount.RDS")
+
+readRDS("HW3c_KCount.RDS") %>% 
+  ggplot() +
+  geom_histogram(mapping=aes(x=K), fill="light blue", color="dark blue", binwidth=2) +
+  labs(
+    title="Frequency of optimal K over 100 selections",
+    y = "Count",
+    x="K"
+  )
+  
+```
+
+With four models, we *could* make the decision to stick with the one that intuitively fits best with our data set, but since our data set is small and our models are *reasonably* efficient, we can directly investigate the relationship they have to one another.
+
+To do this, we can build a K-fold of our data set and train each of the models individually and looks at their error relative to one another. In order to make sure this is a relationship, we can do this 30 times.
+
+``` {r ModelComparison, echo=F}
+
+# This is the code to generate the following RDS. It takes about 30 minutes to run fully; almost 80% of that time is just the randomForest cross validation
+# In order to avoid that running every time we build it, we save the output to a .RDS file that we can read and use to build the graph, which is the code that actually runs in this block.
+# tic.clear()
+# tic.clearlog()
+# tic(glue("Looping with {REPS} loops!"))
+# CVErrGrid = foreach(i=1:REPS, .combine="rbind") %dopar% {
+#   
+#   # -------------Set up the folds for lm, knn, and randomForest-------------
+#   GB_S_Train_Folds = crossv_kfold(GreenBuildings_Train, k=K_Folds)
+#   
+#   
+#   # -------------Error from the linear model-------------
+#   
+#   
+#   lm_Models = map(GB_S_Train_Folds$train, 
+#                       ~lm(Rev_PerSqFtYear ~ size + (age + renovated)^2 + class_a + class_b + green_rating +
+#                             (net + Electricity_Costs + Gas_Costs)^2 + City_Market_Rent, data=.))
+#   
+#   RepErr_LM = map2_dbl(lm_Models, GB_S_Train_Folds$test, rmse) %>% mean
+#   
+#   
+#   
+#   #-------------Error from lasso-------------
+#   
+#   
+#   Lasso_Model = cv.gamlr(GB_X, GB_Y, nfold=K_Folds, verb=T)
+#   RepErr_Lasso = sqrt(Lasso_Model$cvm[Lasso_Model[["seg.min"]]])
+#   
+#   
+#   
+#   # -------------Errors from KNN-------------
+#   
+#   # First, we need to pick the best K value for the KNN model above. We decide on 4
+#   # This is markedly different from what I do in homework 2, wherein we did a full test of potential K for each model. 
+#   # That took FOREVER and this is beefy enough. 
+#   # I instead tested the best k a bunch of times and found that 4 is often the best and rarely outside of 1se from the best.
+#   # So we use 4
+#   
+#   KNN_Models = map(GB_S_Train_Folds$train, ~knnreg(Rev_PerSqFtYear ~ size +
+#                                                      age + renovated + class_a + class_b + green_rating +
+#                                                      net + Electricity_Costs + Gas_Costs + City_Market_Rent,
+#                                                       k=4, data=., use.all=FALSE))
+#   RepErr_KNN = map2_dbl(KNN_Models, GB_S_Train_Folds$test, modelr::rmse) %>% mean
+#   
+#   
+#   
+#   # -------------Random Forest-------------
+#   
+#   
+#   RF_Models = map(GB_S_Train_Folds$train, ~randomForest::randomForest(Rev_PerSqFtYear ~ ., data=., na.action=na.omit))
+#   RepErr_RF = map2_dbl(RF_Models, GB_S_Train_Folds$test, modelr::rmse) %>% mean
+#   
+#   
+#   
+#   
+#   # -------------Dump Data-------------
+#   c(Iteration = i,
+#     LM_Err = RepErr_LM,
+#     Lasso_Err = RepErr_Lasso,
+#     KNN_Err = RepErr_KNN,
+#     RF_Err = RepErr_RF)
+#   
+# } %>% as.data.frame
+# toc(log=T)
+# 
+# 
+# saveRDS(CVErrGrid, here("Data/HW3c_CVErrGrid.RDS"))
+# tic.log() %>% saveRDS(here("Data/BigAnalyitics"))
+# 
+# 
+# 
+# parallel::stopCluster(cl)
+
+#Error plot
+readRDS("HW3c_CVErrGrid.RDS") %>%
+  ggplot(mapping=aes(Iteration)) +
+  geom_point(aes(y=LM_Err, color="Linear Model")) +
+  geom_line(aes(y=LM_Err, color="Linear Model")) +
+  geom_point(aes(y=Lasso_Err, color="Lasso")) +
+  geom_line(aes(y=Lasso_Err, color="Lasso")) +
+  geom_point(aes(y=KNN_Err, color="KNN")) +
+  geom_line(aes(y=KNN_Err, color="KNN")) +
+  geom_point(aes(y=RF_Err, color="Random Forest")) +
+  geom_line(aes(y=RF_Err, color="Random Forest")) +
+  scale_color_brewer(type="qual", palette=2) +
+  labs(
+    title="5-fold Cross-Validated Error by Model",
+    y="Error",
+    color="Color"
+  )
+```
+
+```{r FullRF, echo=F}
+GB_RFModel = randomForest(Rev_PerSqFtYear ~ ., data=GreenBuildings_Train, importance = TRUE, na.action='na.omit')
+```
+It is obviously clear from this plot that the random forest is the best-performing model by a wide margin, even though it has the most variation in it's performance. If we consider the random forest as the best model, we can further investigate how it is making the predictions. Building the model across our entire dataset (instead of averaging the K-folds) can yield some impressive results. When validating, we are predicting with an error of `r modelr::rmse(GB_RFModel, GreenBuildings_Val)`
+
+We can also see the importance of each variable
+``` {r 3VarImp, fig.cap="The most surprising factor here is the unimportance of green rating. This could be due to the marginal nature of this data, since the green buildings are likely independently valuable for other reasons as well."}
+varImpPlot(GB_RFModel, type=1)
+```
+
+The most practically-interesting variables to investigate are the age, renovation status, city market rent, amenities status, and green rating status of the buildings. Of these, the most curious is the green rating, since it does not even consistently make it into the model, much less does it have a large effect on the potential outcomes. This is the marginal effect of the rating status, so we cannot say it does not matter but we can say that it does not seem to make much difference in the current market. 
+
+The other four features of interest *do* consistently make it into the random forest, and we can investigate their partial dependance graphs accordingly.
+
+```{r PD:Age, echo=F, fig.cap = "The partial effect on age suggests that, as buildings get older, their revenue drops."}
+randomForest::partialPlot(GB_RFModel, GreenBuildings_Val, 'age',
+                          xlab="Age", ylab="Dependence",
+                          main="Partial Dependence of Age on Revenue per Square Ft. Year")
+```
+
+```{r PD:Reno, echo=F, fig.cap = "Renovating a building seems to help some at the margin"}
+randomForest::partialPlot(GB_RFModel, GreenBuildings_Val, 'renovated',
+                          xlab="Renovation Status", ylab="Dependence",
+                          main="Partial Dependence of Renovation on Revenue per Square Ft. Year")
+```
+
+```{r PD:CMR, echo=F, fig.cap = "Higher market rent is a strong predictor, and obviously rises the expected returns"}
+randomForest::partialPlot(GB_RFModel, GreenBuildings_Val, 'City_Market_Rent',
+                          xlab="CMR", ylab="Dependence",
+                          main="Partial Dependence of City Market Rent on Revenue per Square Ft. Year")
+```
+
+```{r PD:Amen, echo=F, fig.cap = "Having amenities also seems to increase revenue somewhat"}
+randomForest::partialPlot(GB_RFModel, GreenBuildings_Val, 'amenities',
+                          xlab="Amenities Status", ylab="Dependence",
+                          main="Partial Dependence of Amenities on Revenue per Square Ft. Year")
+```
+# Question 4
+``` {r 4Data, echo=F}
+CAHousing = read.csv("CAHousing.csv") %>%
+  arrange(medianHouseValue) #arrange makes the plots look better
+
+CAH_Split = initial_split(CAHousing, prop=0.9)
+CAH_Train = training(CAH_Split)
+CAH_Test = testing(CAH_Split)
+
+```
+Following with the same logic as the previous question, a random forest is almost certainly the best choice for a model here. When dealing with the housing data, anything that can easily observe the complex interactions between features is something we really want. This model has one hugely important feature that the previous question did not: 2D location data that is **not** distributed linearly. For *this* particular case, we would expect the forest model to enormously outperform the other models. We can see this clearly by simply building our model both with and without the longitude and lattitude. 
+``` {r 4Models, echo=F}
+#Build a training model
+CAH_RF_Complex = randomForest(medianHouseValue ~ ., data=CAH_Train, importance = TRUE, na.action='na.omit')
+CAH_RF_Simple = randomForest(medianHouseValue ~ .-longitude-latitude, data=CAH_Train, importance = TRUE, na.action='na.omit')
+
+#Get an idea of an OOS RMSE
+CAH_S_Err = modelr::rmse(CAH_RF_Simple, CAH_Test)
+CAH_C_Err = modelr::rmse(CAH_RF_Complex, CAH_Test)
+
+#Make predictions across the entire data set
+CAH_RF_C_Full = randomForest(medianHouseValue ~ ., data=CAHousing, importance = TRUE, na.action='na.omit')
+CAH_RF_S_Full = randomForest(medianHouseValue ~ .-longitude-latitude, data=CAHousing, importance = TRUE, na.action='na.omit')
+FullPred_C = predict(CAH_RF_C_Full)
+FullPred_S = predict(CAH_RF_S_Full)
+
+#Add those predictions to the df
+CAHousing$ComplexPred = FullPred_C
+CAHousing$SimplePred = FullPred_S
+
+CAHousing %<>% 
+  mutate(SimpleErr = SimplePred-medianHouseValue,
+         ComplexErr = ComplexPred-medianHouseValue)
+
+```
+The simple model, which does not have a the houses location, has an OOS RMSE of `r CAH_S_Err`. The complex model, which does use the houses location, has an OOS RMSE of `r CAH_C_Err`. The vast differences in the error is due to the ability of the random forest to make use of the chaotically-distributed important locations within California.
+
+When we visualize the data, we can see just how important this information is.
+``` {r CaliMapT, echo=F, fig.cap="The true distribution of houses shows how there is some physical clustering that has very little to do with the a linear notion of location."}
+
+#Bounding box pulled from: https://anthonylouisdagostino.com/bounding-boxes-for-all-us-states/
+CaliMap = get_stamenmap(bbox=c(-124.409591, 32.534156, -114.131211, 42.009518), zoom=6, maptype="toner")
+
+Map_True = ggmap(CaliMap) +
+  geom_point(mapping=aes(longitude, latitude, color=medianHouseValue), data=CAHousing) +
+  scale_color_gradient(low="#3288bd", high="#9e0142", limits=c(14000, 550000)) +
+  theme_void() +
+  labs(
+    title="Median Housing Value - True",
+    color="House Value"
+  )
+Map_True
+
+```
+
+```{r SimplePrediction, echo=F, fig.cap="The first plot shows the predictions themselves, the second plot shows the residuals. Note that the scale for predicted value is much smaller than the scale for true values."}
+Map_S = ggmap(CaliMap) +
+  geom_point(mapping=aes(longitude, latitude, color=SimplePred), data=CAHousing) +
+  scale_color_gradient(low="#3288bd", high="#9e0142", limits=c(15000, 500000)) +
+  theme_void() +
+  labs(
+    #title="Median Housing Value - Simple Prediction",
+    color="House Value"
+  )
+
+Map_SErr = ggmap(CaliMap) +
+  geom_point(mapping=aes(longitude, latitude, color=SimpleErr), data=(arrange(CAHousing, desc(abs(SimpleErr))))) +
+  scale_color_gradient2(low="#1b7837", mid="#e7d4e8", high="#762a83",
+                        midpoint=0, limits=c(-40000, 40000)) +
+  theme_void() +
+  labs(
+    #title="Simple Prediction Residual by Location",
+    color="Residual"
+  )
+ggarrange(Map_S, Map_SErr, nrow=1, ncol=2) %>% annotate_figure(fig.lab="Predicted Values and Residuals - Simple Model", fig.lab.face="bold")
+```
+
+``` {r ComplexPrediction, echo=F, fig.cap="Again, the predictions (left) and the residuals (right) on an identical scale to the previous graph. Note that these are more accurate in general, and especially accurate where there are rapid changes in the true values."}
+
+Map_C = ggmap(CaliMap) +
+  geom_point(mapping=aes(longitude, latitude, color=ComplexPred), data=CAHousing) +
+  scale_color_gradient(low="#3288bd", high="#9e0142", limits=c(15000, 500000)) +
+  theme_void() +
+  labs(
+    #title="Median Housing Value - Complex Prediction",
+    color="House Value"
+  )
+
+Map_CErr = ggmap(CaliMap) +
+  geom_point(mapping=aes(longitude, latitude, color=ComplexErr), data=(arrange(CAHousing, desc(abs(ComplexErr))))) +
+  scale_color_gradient2(low="#1b7837", mid="#e7d4e8", high="#762a83",
+                        midpoint=0, limits=c(-40000, 40000)) +
+  theme_void() +
+  labs(
+    #title="Complex Prediction Residual by Location",
+    color="Residual"
+  )
+
+ggarrange(Map_C, Map_CErr, nrow=1, ncol=2) %>% annotate_figure(fig.lab="Predicted Values and Residuals - Complex Model", fig.lab.face="bold")
+
+```
+
+Given the above, we can see both the substantial increase in accuracy and some evidence as to where that accuracy is found.
