@@ -98,615 +98,20 @@ middle-ground wines are not often produced.
 
 # Question 2
 
-<table class="table" style="width: auto !important; float: left; margin-right: 10px;">
+When investigating the tendencies of twitter users in association with a
+brand, we can look at the principle components of their post counts to
+get an idea of how they tend to intersect. There are four components
+that provide decent insight, which each representing a larger contiguous
+segment than the last. The scale of each component is in terms of
+standard deviations from the mean, so a negative value means “less than
+normal” and a larger value means “more than normal”. Below, we see each
+of the top fifteen factors for each PC in order of magnitude.
+
+<table>
 <thead>
 <tr>
 <th style="text-align:left;">
 Post Type
-</th>
-<th style="text-align:right;">
-Principle Component
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left;">
-religion
-</td>
-<td style="text-align:right;">
--0.2971000
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-food
-</td>
-<td style="text-align:right;">
--0.2969095
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-parenting
-</td>
-<td style="text-align:right;">
--0.2940041
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-sports\_fandom
-</td>
-<td style="text-align:right;">
--0.2877318
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-school
-</td>
-<td style="text-align:right;">
--0.2806379
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-family
-</td>
-<td style="text-align:right;">
--0.2442687
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-beauty
-</td>
-<td style="text-align:right;">
--0.2015184
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-crafts
-</td>
-<td style="text-align:right;">
--0.1936276
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-cooking
-</td>
-<td style="text-align:right;">
--0.1888085
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-fashion
-</td>
-<td style="text-align:right;">
--0.1838818
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-photo\_sharing
-</td>
-<td style="text-align:right;">
--0.1802795
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-eco
-</td>
-<td style="text-align:right;">
--0.1453356
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-computers
-</td>
-<td style="text-align:right;">
--0.1433312
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-outdoors
-</td>
-<td style="text-align:right;">
--0.1426042
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-personal\_fitness
-</td>
-<td style="text-align:right;">
--0.1375011
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-business
-</td>
-<td style="text-align:right;">
--0.1350100
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-shopping
-</td>
-<td style="text-align:right;">
--0.1329950
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-automotive
-</td>
-<td style="text-align:right;">
--0.1313252
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-politics
-</td>
-<td style="text-align:right;">
--0.1302662
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-sports\_playing
-</td>
-<td style="text-align:right;">
--0.1302165
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-news
-</td>
-<td style="text-align:right;">
--0.1276433
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-chatter
-</td>
-<td style="text-align:right;">
--0.1259924
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-health\_nutrition
-</td>
-<td style="text-align:right;">
--0.1242011
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-music
-</td>
-<td style="text-align:right;">
--0.1240892
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-small\_business
-</td>
-<td style="text-align:right;">
--0.1190418
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-travel
-</td>
-<td style="text-align:right;">
--0.1166490
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-home\_and\_garden
-</td>
-<td style="text-align:right;">
--0.1157650
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-dating
-</td>
-<td style="text-align:right;">
--0.1051565
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-art
-</td>
-<td style="text-align:right;">
--0.0979493
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-tv\_film
-</td>
-<td style="text-align:right;">
--0.0974567
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-current\_events
-</td>
-<td style="text-align:right;">
--0.0972367
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-uncategorized
-</td>
-<td style="text-align:right;">
--0.0944351
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-college\_uni
-</td>
-<td style="text-align:right;">
--0.0941567
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-online\_gaming
-</td>
-<td style="text-align:right;">
--0.0738898
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-adult
-</td>
-<td style="text-align:right;">
--0.0267310
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-spam
-</td>
-<td style="text-align:right;">
--0.0114609
-</td>
-</tr>
-</tbody>
-</table>
-<table class="table" style="width: auto !important; float: left; margin-right: 10px;">
-<thead>
-<tr>
-<th style="text-align:left;">
-rowname
-</th>
-<th style="text-align:right;">
-PC2
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left;">
-sports\_fandom
-</td>
-<td style="text-align:right;">
--0.3169236
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-religion
-</td>
-<td style="text-align:right;">
--0.3161528
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-cooking
-</td>
-<td style="text-align:right;">
-0.3142880
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-photo\_sharing
-</td>
-<td style="text-align:right;">
-0.3030776
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-parenting
-</td>
-<td style="text-align:right;">
--0.2950822
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-fashion
-</td>
-<td style="text-align:right;">
-0.2797997
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-food
-</td>
-<td style="text-align:right;">
--0.2378087
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-shopping
-</td>
-<td style="text-align:right;">
-0.2098528
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-beauty
-</td>
-<td style="text-align:right;">
-0.2086099
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-school
-</td>
-<td style="text-align:right;">
--0.1975724
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-chatter
-</td>
-<td style="text-align:right;">
-0.1972255
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-family
-</td>
-<td style="text-align:right;">
--0.1962532
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-health\_nutrition
-</td>
-<td style="text-align:right;">
-0.1465778
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-uncategorized
-</td>
-<td style="text-align:right;">
-0.1464989
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-personal\_fitness
-</td>
-<td style="text-align:right;">
-0.1446118
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-music
-</td>
-<td style="text-align:right;">
-0.1442595
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-college\_uni
-</td>
-<td style="text-align:right;">
-0.1159597
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-outdoors
-</td>
-<td style="text-align:right;">
-0.1135818
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-sports\_playing
-</td>
-<td style="text-align:right;">
-0.1085954
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-business
-</td>
-<td style="text-align:right;">
-0.0987826
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-small\_business
-</td>
-<td style="text-align:right;">
-0.0940481
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-eco
-</td>
-<td style="text-align:right;">
-0.0853220
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-online\_gaming
-</td>
-<td style="text-align:right;">
-0.0835916
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-tv\_film
-</td>
-<td style="text-align:right;">
-0.0793525
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-dating
-</td>
-<td style="text-align:right;">
-0.0715352
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-current\_events
-</td>
-<td style="text-align:right;">
-0.0640365
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-art
-</td>
-<td style="text-align:right;">
-0.0603471
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-home\_and\_garden
-</td>
-<td style="text-align:right;">
-0.0468035
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-travel
-</td>
-<td style="text-align:right;">
-0.0399473
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-computers
-</td>
-<td style="text-align:right;">
-0.0373349
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-news
-</td>
-<td style="text-align:right;">
--0.0361989
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-automotive
-</td>
-<td style="text-align:right;">
--0.0315641
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-crafts
-</td>
-<td style="text-align:right;">
--0.0216232
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-politics
-</td>
-<td style="text-align:right;">
-0.0139400
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-adult
-</td>
-<td style="text-align:right;">
--0.0069182
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-spam
-</td>
-<td style="text-align:right;">
--0.0045516
-</td>
-</tr>
-</tbody>
-</table>
-<table class="table" style="width: auto !important; float: left; margin-right: 10px;">
-<thead>
-<tr>
-<th style="text-align:left;">
-rowname
 </th>
 <th style="text-align:right;">
 PC1
@@ -794,52 +199,74 @@ fashion
 -0.1838818
 </td>
 </tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th style="text-align:left;">
+Post Type
+</th>
+<th style="text-align:right;">
+PC2
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+sports\_fandom
+</td>
+<td style="text-align:right;">
+-0.3169236
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+religion
+</td>
+<td style="text-align:right;">
+-0.3161528
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+cooking
+</td>
+<td style="text-align:right;">
+0.3142880
+</td>
+</tr>
 <tr>
 <td style="text-align:left;">
 photo\_sharing
 </td>
 <td style="text-align:right;">
--0.1802795
+0.3030776
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-eco
+parenting
 </td>
 <td style="text-align:right;">
--0.1453356
+-0.2950822
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-computers
+fashion
 </td>
 <td style="text-align:right;">
--0.1433312
+0.2797997
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-outdoors
+food
 </td>
 <td style="text-align:right;">
--0.1426042
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-personal\_fitness
-</td>
-<td style="text-align:right;">
--0.1375011
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-business
-</td>
-<td style="text-align:right;">
--0.1350100
+-0.2378087
 </td>
 </tr>
 <tr>
@@ -847,71 +274,45 @@ business
 shopping
 </td>
 <td style="text-align:right;">
--0.1329950
+0.2098528
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-automotive
+beauty
 </td>
 <td style="text-align:right;">
--0.1313252
+0.2086099
 </td>
 </tr>
+<tr>
+<td style="text-align:left;">
+school
+</td>
+<td style="text-align:right;">
+-0.1975724
+</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th style="text-align:left;">
+Post Type
+</th>
+<th style="text-align:right;">
+PC3
+</th>
+</tr>
+</thead>
+<tbody>
 <tr>
 <td style="text-align:left;">
 politics
 </td>
 <td style="text-align:right;">
--0.1302662
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-sports\_playing
-</td>
-<td style="text-align:right;">
--0.1302165
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-news
-</td>
-<td style="text-align:right;">
--0.1276433
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-chatter
-</td>
-<td style="text-align:right;">
--0.1259924
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-health\_nutrition
-</td>
-<td style="text-align:right;">
--0.1242011
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-music
-</td>
-<td style="text-align:right;">
--0.1240892
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-small\_business
-</td>
-<td style="text-align:right;">
--0.1190418
+-0.4899027
 </td>
 </tr>
 <tr>
@@ -919,55 +320,109 @@ small\_business
 travel
 </td>
 <td style="text-align:right;">
--0.1166490
+-0.4242597
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-home\_and\_garden
+computers
 </td>
 <td style="text-align:right;">
--0.1157650
+-0.3670315
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-dating
+news
 </td>
 <td style="text-align:right;">
--0.1051565
+-0.3360356
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-art
+health\_nutrition
 </td>
 <td style="text-align:right;">
--0.0979493
+0.2255148
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-tv\_film
+personal\_fitness
 </td>
 <td style="text-align:right;">
--0.0974567
+0.2173747
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-current\_events
+cooking
 </td>
 <td style="text-align:right;">
--0.0972367
+0.1944997
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-uncategorized
+automotive
 </td>
 <td style="text-align:right;">
--0.0944351
+-0.1908427
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+beauty
+</td>
+<td style="text-align:right;">
+0.1507105
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+outdoors
+</td>
+<td style="text-align:right;">
+0.1403903
+</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th style="text-align:left;">
+Post Type
+</th>
+<th style="text-align:right;">
+PC4
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+health\_nutrition
+</td>
+<td style="text-align:right;">
+-0.4634666
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+personal\_fitness
+</td>
+<td style="text-align:right;">
+-0.4444448
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+outdoors
+</td>
+<td style="text-align:right;">
+-0.4147432
 </td>
 </tr>
 <tr>
@@ -975,7 +430,7 @@ uncategorized
 college\_uni
 </td>
 <td style="text-align:right;">
--0.0941567
+0.2555873
 </td>
 </tr>
 <tr>
@@ -983,24 +438,373 @@ college\_uni
 online\_gaming
 </td>
 <td style="text-align:right;">
--0.0738898
+0.2207630
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-adult
+politics
 </td>
 <td style="text-align:right;">
--0.0267310
+-0.1967260
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-spam
+news
 </td>
 <td style="text-align:right;">
--0.0114609
+-0.1768761
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+sports\_playing
+</td>
+<td style="text-align:right;">
+0.1756699
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+photo\_sharing
+</td>
+<td style="text-align:right;">
+0.1514910
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+beauty
+</td>
+<td style="text-align:right;">
+0.1469076
 </td>
 </tr>
 </tbody>
 </table>
+
+The first principle component represents the largest segment of users;
+most significantly, they are all negatively signed. This means that the
+most common thing the mass of users share in common are the things they
+do not post. Given that, the first PC does not contain a huge amount of
+information beyond the tendency of twitter users to make a lot of
+self-similar posts. The second PC represents people who are interested
+in fashion, photo sharing, cooking, health, and personal fitness but do
+not tend to post religious, sports-related, or family-related posts.
+This is conducive with active, single (or young) customers. The third PC
+has a decent intersection, with the biggest difference being the very
+negative inclusion of politics, travel, and computer related posts and
+the small but positive inclusion of religious posts. If we, for a
+moment, investigate just the mean and median of religious posts we can
+see a (not scaled) mean of 1.095 and a median of 0. Given the sever
+right skew, it is likely that this slight inclusion in the third
+principle component represents a substantial preference toward religious
+posts whereas other groups post *very* few, if any, religious tweets .
+This amounts to two core groups of physically active, outdoors-focused
+customers: one group that is socially focused (posting about beauty,
+fashion, and sharing photos) who *may* be political while the other is
+definitely not political, but is religious and more likely to have a
+family, while also being slightly less concerned with popular culture.
+
+The outlying group is represented by the fourth principal component:
+they are notably less concerned with health and the outdoors than the
+rest of the consumer base. Additionally, this group is probably college
+aged (often posting about college), and interested in ‘typical’ college
+topics: online gaming, sports playing, photo sharing, and beauty.
+
+# Question 3
+
+When it comes to the placement of items in a grocery store there are two
+main questions: how should we, generally, organize out store so that
+customers are able to shop easily and where should we break from that
+rule to influence more purchases. This first question is one of raw
+association: if you are buying things, we want to make sure that you
+know where to buy it and are able to get as many things as possible near
+to each other. The second question is more complicated; there are two
+obvious paths: placing items that have a strong relationship with one
+another even when they have no similar relationships and placing items
+in such a way that you are more likely to buy that item given it’s new
+placement than you were before. This first goal is achievable here and,
+by selecting brands with higher profit margins than others, we can
+increase revenue (i.e. putting name-brand cookies next to milk while all
+other cookies are in the cookie aisle). The second question is *not* of
+concern here, since that is a question of change in lift subject to
+placements and outside the scope of our data.
+
+For the first part: organization of stores. This is a question of
+centrality given support and confidence of association rules. We are not
+yet concerned with lift, just in associating items that appear together
+often and organizing around those.
+
+![The mix of baskets being purchased](Baskets_Mixed.png)
+
+The staple foods are the unsurprising centers for this organization,
+whole milk and a medley of vegetables show up near to each other, and
+are closely related to breads and potatoes/carrots. On the further
+wings, we have ice cream, yogurt, and tropical fruits gravitating toward
+whole milk. Fruit juice bridges the gap between fruit, water, and soda,
+all of which are closer to bread and vegetables than milk. These results
+are somewhat unsurprising and closely mimic what you would find in any
+grocery store.
+
+Placing products to defy these conventions is a bit more interesting.
+This is a question mainly of lift and confidence. In particular, we want
+to meet a threshold for confidence that ensures our decisions matter
+while seeking the highest possible lift.
+
+![The high-lift associations](Baskets_Single.png)
+
+Looking at these relationships, we can start to see some critical
+associations. These are the high-lift associations across products and
+the structure is somewhat interesting. There are a handful of key
+families that draw paths that can be intuited, such as canned fish being
+related to mayonnaise (two key ingredients for tuna salad and not for
+much else) and mayonnaise being closely associated to ketchup, both of
+which are important for hamburgers. Finally, both of these close pairs
+are pretty strongly associated with dish cleaner for obvious reasons.
+
+Beyond this core of highly-cross associated chunks, there are ‘islands’
+that represent pairs that don’t associated with anything else.
+Beer/wine/liquor and pretzels/nuts/salty snacks are two islands like
+this, which represent items that are normally bought in variety and not
+often paired with much else. If we just list the top few rules, we can
+see the most valuable items to put together.
+
+<table>
+<thead>
+<tr>
+<th style="text-align:left;">
+First Item
+</th>
+<th style="text-align:left;">
+Second Item
+</th>
+<th style="text-align:right;">
+Lift
+</th>
+<th style="text-align:right;">
+Count
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+{cleaner}
+</td>
+<td style="text-align:left;">
+{abrasive cleaner}
+</td>
+<td style="text-align:right;">
+28.10
+</td>
+<td style="text-align:right;">
+5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+{pickled vegetables}
+</td>
+<td style="text-align:left;">
+{specialty vegetables}
+</td>
+<td style="text-align:right;">
+16.44
+</td>
+<td style="text-align:right;">
+5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+{female sanitary products}
+</td>
+<td style="text-align:left;">
+{cleaner}
+</td>
+<td style="text-align:right;">
+16.39
+</td>
+<td style="text-align:right;">
+5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+{baking powder}
+</td>
+<td style="text-align:left;">
+{cooking chocolate}
+</td>
+<td style="text-align:right;">
+15.83
+</td>
+<td style="text-align:right;">
+7
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+{mustard}
+</td>
+<td style="text-align:left;">
+{ketchup}
+</td>
+<td style="text-align:right;">
+13.89
+</td>
+<td style="text-align:right;">
+7
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+{mustard}
+</td>
+<td style="text-align:left;">
+{mayonnaise}
+</td>
+<td style="text-align:right;">
+12.97
+</td>
+<td style="text-align:right;">
+14
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+{hamburger meat}
+</td>
+<td style="text-align:left;">
+{Instant food products}
+</td>
+<td style="text-align:right;">
+11.42
+</td>
+<td style="text-align:right;">
+30
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+{canned fish}
+</td>
+<td style="text-align:left;">
+{meat spreads}
+</td>
+<td style="text-align:right;">
+11.08
+</td>
+<td style="text-align:right;">
+7
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+{detergent}
+</td>
+<td style="text-align:left;">
+{softener}
+</td>
+<td style="text-align:right;">
+10.60
+</td>
+<td style="text-align:right;">
+11
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+{red/blush wine}
+</td>
+<td style="text-align:left;">
+{liquor}
+</td>
+<td style="text-align:right;">
+10.03
+</td>
+<td style="text-align:right;">
+21
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+{pet care}
+</td>
+<td style="text-align:left;">
+{sauces}
+</td>
+<td style="text-align:right;">
+9.79
+</td>
+<td style="text-align:right;">
+5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+{cling film/bags}
+</td>
+<td style="text-align:left;">
+{house keeping products}
+</td>
+<td style="text-align:right;">
+9.64
+</td>
+<td style="text-align:right;">
+9
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+{butter}
+</td>
+<td style="text-align:left;">
+{rubbing alcohol}
+</td>
+<td style="text-align:right;">
+9.02
+</td>
+<td style="text-align:right;">
+5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+{canned vegetables}
+</td>
+<td style="text-align:left;">
+{specialty cheese}
+</td>
+<td style="text-align:right;">
+8.84
+</td>
+<td style="text-align:right;">
+8
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+{salt}
+</td>
+<td style="text-align:left;">
+{jam}
+</td>
+<td style="text-align:right;">
+8.75
+</td>
+<td style="text-align:right;">
+5
+</td>
+</tr>
+</tbody>
+</table>
+
+This gives a good idea of the strongest associations across the data in
+terms of lift. Cleaners and abrasive cleaners are a good example of
+items that would intuitively be grouped, since they are *only* bought
+together whereas the association between cheese and canned vegetables is
+possibly less obvious unless you are a frequent consumer of charcuterie
+boards.

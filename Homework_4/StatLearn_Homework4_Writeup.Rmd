@@ -2,8 +2,10 @@
 title: "Homework_4_Writeup"
 author: "Robert Petit"
 date: "May, 2022"
-output: html_document
-
+output:
+  md_document: default
+knit: (function(inputFile, encoding) {
+  rmarkdown::render(inputFile, output_format = "all") })
 ---
 
 ```{r setup, include=FALSE}
@@ -228,19 +230,15 @@ SocMed %>% select(-X) %>%
   prcomp(scale=T, rank=4) -> PCA_SocMed #Calculate the PCA and stick it in a variable
 
 # For each PC, we hand sort it to prepare for our lord a kabler
-PCA_SocMed$rotation %>% as.data.frame %>% select(PC1) %>% arrange(desc(abs(PC1))) %>% head(15) %>% rownames_to_column(var="Post Type") -> PC1_Sorted
-PCA_SocMed$rotation %>% as.data.frame %>% select(PC2) %>% arrange(desc(abs(PC2))) %>% head(15) %>% rownames_to_column(var="Post Type") -> PC2_Sorted
-PCA_SocMed$rotation %>% as.data.frame %>% select(PC3) %>% arrange(desc(abs(PC3))) %>% head(15) %>% rownames_to_column(var="Post Type") -> PC3_Sorted
-PCA_SocMed$rotation %>% as.data.frame %>% select(PC4) %>% arrange(desc(abs(PC4))) %>% head(15) %>% rownames_to_column(var="Post Type") -> PC4_Sorted
+PCA_SocMed$rotation %>% as.data.frame %>% select(PC1) %>% arrange(desc(abs(PC1))) %>% head(10) %>% rownames_to_column(var="Post Type") -> PC1_Sorted
+PCA_SocMed$rotation %>% as.data.frame %>% select(PC2) %>% arrange(desc(abs(PC2))) %>% head(10) %>% rownames_to_column(var="Post Type") -> PC2_Sorted
+PCA_SocMed$rotation %>% as.data.frame %>% select(PC3) %>% arrange(desc(abs(PC3))) %>% head(10) %>% rownames_to_column(var="Post Type") -> PC3_Sorted
+PCA_SocMed$rotation %>% as.data.frame %>% select(PC4) %>% arrange(desc(abs(PC4))) %>% head(10) %>% rownames_to_column(var="Post Type") -> PC4_Sorted
 
-kable(PC1_Sorted) %>%
-  kable_styling(full_width = F, position="float_left")
-kable(PC2_Sorted)%>%
-  kable_styling(full_width = F, position="float_left")
-kable(PC3_Sorted)%>%
-  kable_styling(full_width = F, position="float_left")
-kable(PC4_Sorted)%>%
-  kable_styling(full_width = F, position="float_left")
+kable(PC1_Sorted)
+kable(PC2_Sorted)
+kable(PC3_Sorted)
+kable(PC4_Sorted)
 
 
 
@@ -321,7 +319,7 @@ LiftTable = read.delim("groceries.txt", header=FALSE) %$%
   arrange(desc(lift)) %>%
   head(15) %>%
   mutate_if(is.numeric, round, 2) %>%
-  kbl(col.names = c("First Item", "Second Item", "Lift", "Count"))
+  kable(col.names = c("First Item", "Second Item", "Lift", "Count"))
 
 ```
 ``` {r PrintTable, echo=F}
