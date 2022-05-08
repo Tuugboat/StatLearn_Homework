@@ -1,0 +1,3 @@
+https://cosylab.iiitd.edu.in/flavordb/entity_details?id=972 - id runs from 1 to 972 for all of the naturally occuring entities
+https://cosylab.iiitd.edu.in/flavordb/entities_json?id=972 will download the corresponding id from above [1,192]
+https://cooking.nytimes.com/collections?page=1 is the best way to start grabbing recipes, probably
