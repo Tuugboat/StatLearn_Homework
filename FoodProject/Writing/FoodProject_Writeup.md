@@ -45,11 +45,16 @@ foods and deciphering their various nuances.
 
 ## The Data
 
-The principle data set used is the present flavor molecules in each of
-707 recognizable ingredients, such as rye bread, garlic, and tangerines.
-There are 1772 tracked across these ingredients, with a huge number of
-overlap between various foods. Both of these counts are after all
-transformations and simplifications discussed in this section.
+The data set we will draw from is a list of observed flavor molecules in
+each of 707 recognizable ingredients, such as rye bread, garlic, and
+tangerines. There are 1772 tracked across these ingredients, with a huge
+number of overlap between various foods. Both of these totals are after
+all transformations and simplifications discussed in this section. We
+are not working with densities or total lists of all compounds, simply a
+present/not present list for 1772 compounds across all ingredients.
+There is some small heterogeneity in the tests performed, not all
+ingredients were tested for all molecules, but the vast majority of
+molecules have been correctly identified.
 
 This data was scraped from
 [FlavorDB’s](https://cosylab.iiitd.edu.in/flavordb/) entity information
@@ -78,27 +83,33 @@ ingredients](FoodProject_Writeup_files/figure-markdown_strict/ComplexityTable-1.
 
 As you can see in figure 1, this data has some important nuances to it
 that become apparent at a quick glance of the most and least
-compound-dense foods in the set. First, it is not a complete record of
-all compounds but rather a list of ‘common’ compounds in each food.
-Because of this, foods that are more commonly consumed will likely have
-more compounds in them; the extreme cases of this are in the very
-esoteric foods, which often only have one compound recorded. Second,
-foods are grouped together; each variety of peach is represented only as
-‘peach’. This generally does not create a huge number of problems, but
-for cases like tea, which is hugely varied *and* very common, there are
-a disproportionate number of compounds associated with them. This causes
-significant issues for the ‘matching’ approach to food pairings, which
-match purely on the number of similar molecules observed. Clustering in
-particular should provide *some* limits to that effect, since each
-ingredient is forced to exist in only one cluster.
+compound-dense ingredients in the set. First, it is not a complete
+record of all compounds but rather a list of ‘common’ compounds in each
+ingredient. Because of this, ingredients that are more commonly consumed
+will likely have more compounds identified in them. There are two
+extremes to this: at low end very esoteric ingredients, which often only
+have a few compounds recorded whereas simpler but more common
+ingredients will have many more compounds identified. The other cause
+for the vast differences is in the somewhat arbitrary nature of how
+ingredients are grouped together; each variety of peach is represented
+only as ‘peach’ whereas there are dozens of different whisky and cheese
+variety. This generally does not create a huge number of problems, but
+for cases like tea, which is hugely varied, grouped into one stack,
+*and* very common, there are a disproportionate number of compounds
+associated with it. This causes significant issues for the ‘matching’
+approach to food pairings, which matches purely on the number of similar
+molecules observed. Clustering in particular should provide *some*
+limits to that effect, since each ingredient is forced to exist in only
+one cluster.
 
-On average, each food will have a an average of 84.0353607 molecules and
-a median of 93. This hints at a left-skew of the data, wherein a small
-number have disproportionately large numbers of compound Thankfully,
-these tend to occur in places where we can provide very solid subjective
-interpretation, such as with tea, as opposed to confusing or difficult
-to consider ingredients like walrus meat, which means we can still
-interpret and understand our data using these methods.
+On average, each ingredient will have an average of 84.0353607 molecules
+and a median of 93. This hints at a left-skew of the data, wherein a
+small number have disproportionately large numbers of compound
+Thankfully, these tend to occur in places where we can provide very
+solid subjective interpretation, such as with tea, as opposed to
+confusing or difficult to consider ingredients like walrus meat, which
+means we can still interpret and understand our data using these
+methods.
 
 Additionally, there is the question of shared compound within our set.
 Since these are the source of our matching, extremely low or extremely
@@ -110,13 +121,13 @@ ingredients](FoodProject_Writeup_files/figure-markdown_strict/CompFreq-1.png)
 
 With an average frequency of 0.047424 and a median of 0.0056577 there
 are certainly a number of compounds that only show up in a very select
-number of foods. Generally, since these are what we are clustering on,
-we are not overwhelmingly concerned with these occurrences. For some
+number of ingredients. Generally, since these are what we are clustering
+on, we are not overwhelmingly concerned with these occurrences. For some
 more simple understanding of the data, we can turn to our flavor
 profiles for each of the frequent molecules above. Each ingredient that
 contains these flavor compounds will include those flavors in their
 overall profile. Further intuition is provided by a random sample of
-foods that contain this compounds.
+ingredients that contain this compounds.
 
 <table>
 <thead>
@@ -198,12 +209,12 @@ Blackberry
 
 The approach here will be twofold: first, we will cluster the data and
 observe the within-group characteristics for intuition. Second, we will
-perform basic analysis on the principle components of the foods, paying
-particular attention to foods that make up fairly unique branches of
-these components. Both of these approaches should provide some intuition
-beyond the matching approach since we infer the ‘not present’ chemicals
-in our data set and use those to shape both our clusters and our
-principal components.
+perform basic analysis on the principal components of the ingredients,
+paying particular attention to ingredients that make up fairly unique
+branches of these components. Both of these approaches should provide
+some intuition beyond the matching approach since we infer the ‘not
+present’ chemicals in our data set and use those to shape both our
+clusters and our principal components.
 
 The clustering method will produce single-membership sets of
 ingredients, where each cluster has significant commonalities with the
@@ -559,8 +570,8 @@ Mountain Papaya, Kenaf, Mate, Bartlett Pear
 
 Some of these clusters serve as important sanity checks for our results.
 Cluster 2, which contains 10 different types of cheese, is a good
-indicator that we are appropriately clustering by foods that would ‘go
-well’ together in the strictest sense. Cluster 6 provides the same
+indicator that we are appropriately clustering by ingredients that would
+‘go well’ together in the strictest sense. Cluster 6 provides the same
 information for wine, 7 pulls the brandy, 12 grabs all whisky, and 13
 contains the high fat-content meats and oils.
 
@@ -573,7 +584,7 @@ clusters that are still not quite surprising are the herbs that make up
 clusters 9, 10, and 11. While these are expected to be close to one
 another, some pairings suggested here may surprise nonetheless: Orange
 and pepper in particular is a pairing that, while strange to most
-western palettes, is common in Indian and African foods, whereas
+western palettes, is common in Indian and African ingredients, whereas
 peppermint and capsicum, a spicy pepper, would quite likely be off
 putting if used together.
 
@@ -601,9 +612,9 @@ diverse byproduct of wine. The other seven entries are odd at first
 glance, but crab is often paired with slightly sweet sauces and
 mixtures; Sake, an alcoholic beverage from Japan, is commonly paired
 with seafood such as crab and crayfish; and yogurt contains many of the
-same acids as vinegar. Out of the entire selection of foods from the
-clusters, it seems that cluster 8 has the most uncommon but potentially
-promising pairings.
+same acids as vinegar. Out of the entire selection of ingredients from
+the clusters, it seems that cluster 8 has the most uncommon but
+potentially promising pairings.
 
 ## Principal Component Analysis
 
@@ -744,10 +755,10 @@ Wine
 These are somewhat difficult to interpret; since the flavor palettes are
 not mutually exclusive, we often will see the same flavors in both the
 “more” and “less” columns. Additionally, it is not quite so
-straightforward as simply separating the foods from one another, in many
-cases (such as PC4 and PC6) we actually see the two extremes commonly
-paired together whereas other identified components (such as PC9) simply
-clash with one another.
+straightforward as simply separating the ingredients from one another,
+in many cases (such as PC4 and PC6) we actually see the two extremes
+commonly paired together whereas other identified components (such as
+PC9) simply clash with one another.
 
 One possible interpretation of these PCs is more as a
 comparing/contrasting axis than a set of pair/don’t pair guidelines. By
@@ -763,8 +774,8 @@ are somewhat intuitive while providing new pairings that are uncommon
 and potentially fruitful; to fully test these will require an
 extraordinary amount of cooking, but there do seem to be some
 improvements, if only in select cases, to the typical method of simply
-matching foods by the most number of similarities. The main limitations
-of this method come from the data; the grouping of the observations
-causes significant, arbitrary loss of accuracy and the inconsistent
-nature of the compounds being observed may unfairly skew the data toward
-established combinations and comparisons.
+matching ingredients by the most number of similarities. The main
+limitations of this method come from the data; the grouping of the
+observations causes significant, arbitrary loss of accuracy and the
+inconsistent nature of the compounds being observed may unfairly skew
+the data toward established combinations and comparisons.
