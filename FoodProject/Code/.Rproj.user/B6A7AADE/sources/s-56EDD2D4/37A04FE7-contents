@@ -1,0 +1,217 @@
+# Title: Homework 3 Working file
+# Author: Robert Petit
+# Desc: Working file for the homework 3 writeup. Actuall writeup is in /Rmd
+
+# Pream
+theme_set(theme_minimal())
+library(ggcorrplot)
+library(RColorBrewer)
+library(cluster)
+library(reshape2)
+library(LICORS)
+
+library(arules)
+library(arulesViz)
+library(igraph)
+
+DivColor = brewer.pal(n=7, name="PRGn")
+QualColor = brewer.pal(n=5, name="Set1")
+
+
+########################## Problem 1 ##########################
+
+Wine = read.csv(here("Data/wine.csv"))
+
+# Goal: set up the best cluster and a PCA on the chemical properties only
+# Look at which one allows you to best differentiate the colo and qualities of the wine.
+# We are not running a surpervised learning algorithm here, just looking at cluster effects
+
+
+
+Wine_Labels = Wine %>%
+  mutate(WineColor = factor(color)) %>% 
+  # We rename this and factor it so it is easy to read in subsequent plots
+  # Technically unnecessary
+  select(c(WineColor, quality))
+  
+
+Wine_NoLabel = Wine %>%
+  select(!c(color, quality)) %>%
+  scale(center=T, scale=F)
+
+######### Clustering #########
+
+# TAKES FOREVER so commented out
+# Finding the best k by selecting the first local max in the gap statistic
+# clusGap(x=Wine_NoLab_Scaled, FUNcluster = kmeans, K.max = 10, B=50, nstart=50) %>% saveRDS(here("Data/WineGapStat.RDS"))
+
+#We want the label-less, scaled data
+Wine_NoLab_Scaled = Wine %>%
+  select(!c(color, quality)) %>%
+  scale(center=T, scale=T)
+
+# Grab the center and scale info, which will help interperet the clusters
+Wine_mu = attr(Wine_NoLab_Scaled, "scaled:center")
+Wine_sigma = attr(Wine_NoLab_Scaled, "scaled:scale")
+
+readRDS(here("Data/WineGapStat.RDS")) %>%
+  ggplot(aes())
+
+Cluster_Wine = kmeanspp(Wine_NoLab_Scaled, 5, nstart=30)
+
+#The clusters themselves, unscaled and uncentered
+(Cluster_Wine$center*Wine_sigma + Wine_mu) %>% round(2)
+
+Wine_Combined_Cluster = cbind(Wine_Labels, Cluster_Wine$cluster)
+
+colnames(Wine_Combined_Cluster) <- c("WineColor", "quality", "ClusterID")
+
+Wine_Combined_Cluster %>%
+  ggplot() +
+  geom_jitter(mapping=aes(WineColor, quality, color=factor(ClusterID))) +
+  scale_color_manual(values=QualColor) +
+  labs(
+    title="Color and Quality, visualized by Cluster",
+    x="Wine Color",
+    y="Wine Quality",
+    color="Cluster ID"
+  )
+#caption: "It's easy to see the separation between Red and White wines here, since the two colors are dominated by about half of the clusters
+
+
+
+Wine_Combined_Cluster %>%
+  group_by(ClusterID) %>%
+  summarize(WhiteProp = sum(WineColor == "white")/n(),
+            Q_Mean = mean(quality), Q_SD = sd(quality)) %>%
+  ggplot() +
+  geom_col(aes(factor(ClusterID), WhiteProp, fill=factor(ClusterID))) +
+  scale_fill_manual(values=QualColor) +
+  theme(legend.position="none") +
+  labs(
+    title="Proportion of Wines in each cluster",
+    x="Cluster",
+    y="White Wine Proportion"
+  )
+
+#Caption: Investigating the proportion of each cluster that is white wine gives us a very clear picture of just how separated these clusters are. More extreme values here is better.
+
+
+Wine_Combined_Cluster %>%
+  ggplot(aes(factor(ClusterID), quality)) +
+  geom_boxplot(mapping=aes(color=factor(ClusterID))) +
+  scale_color_manual(values=QualColor) +
+  theme(legend.position="none") +
+  labs(
+    title="Wine Quality Distribution by Cluster",
+    x="Cluster",
+    y="Quality"
+  )
+
+######### PCA #########
+
+# PC Questions, for reference
+# What do the loadings mean?
+# How do the scores differentiate the data?
+
+PC_Wine = prcomp(Wine_NoLabel, scale=TRUE, rank=9)
+Wine_Loadings = PC_Wine$rotation %>% as.data.frame %>% rownames_to_column("Property")
+Wine_Scores = PC_Wine$x %>% as.data.frame
+
+Wine_Combined_PCA = cbind(Wine_Labels, Wine_Scores)
+
+Wine_Combined_PCA %>% 
+  ggplot() +
+  geom_point(mapping = aes(PC1, PC2, color=WineColor)) +
+  scale_color_manual(values=c("red", "blue"), labels=c("Red", "White")) +
+  labs(
+    title = "Color by Principle Components",
+    color = "Wine Color"
+  )
+#Pretty clearly excelent at distinguishing the reds and whites
+
+Wine_Combined_PCA %>% 
+  ggplot() +
+  geom_point(mapping = aes(PC1, PC2, color=quality)) +
+  scale_color_gradient2(low=DivColor[1], mid=DivColor[4], high=DivColor[7],
+                        midpoint=6) +
+  labs(
+    title = "Quality by Principle Components",
+    color = "Quality"
+  )
+
+Wine_Combined_PCA %>%
+  ggplot() +
+  geom_jitter(mapping=aes(PC2, quality), width=0, height=0.2, alpha=0.4) +
+  labs(
+    title="Quality by PC2",
+    x="PC2",
+    y="Wine Quality"
+  )
+#Points are jittered on the y-axis only
+
+melt(Wine_Combined_PCA, c("WineColor", "quality")) %>%
+  ggplot(mapping=aes(factor(quality), value)) +
+  geom_boxplot() +
+  facet_wrap(~variable) +
+  labs(
+    title="PCA by Quality for 6 Different Components",
+    x="Wine Quality",
+    y="Component Value Distribution"
+  ) +
+  coord_flip()
+
+########################## Problem 2 ##########################
+
+SocMed = read.csv(here("Data/social_marketing.csv"))
+
+SocMed %>% select(-X) %>% prcomp(scale=T, rank=4) -> PCA_SocMed
+
+PCA_SocMed$rotation %>% as.data.frame %>% select(PC1) %>% arrange(desc(abs(PC1))) -> PC1_Sorted
+PCA_SocMed$rotation %>% as.data.frame %>% select(PC2) %>% arrange(desc(abs(PC2))) -> PC2_Sorted
+PCA_SocMed$rotation %>% as.data.frame %>% select(PC3) %>% arrange(desc(abs(PC3))) -> PC3_Sorted
+PCA_SocMed$rotation %>% as.data.frame %>% select(PC4) %>% arrange(desc(abs(PC4))) -> PC4_Sorted
+
+kbl(list(PC1_Sorted, PC2_Sorted, PC3_Sorted, PC4_Sorted))
+
+########################## Problem 3 ##########################
+
+# Read object, split the single strings into a list of items, check for uniqueness
+BasketRules_Multi <- read.delim(here("Data/groceries.txt"), header=FALSE) %$%
+  strsplit(V1,",") %>%
+  lapply(unique) %>%
+  #We cast to transactions here, as required by apriori
+  as("transactions") %>%
+  # Run apriori to get the association rules
+  # For this output, we are only concerned with the high support, high confidence rules
+  # See writeup for logic
+  apriori(parameter=list(support=.01, confidence=.02, maxlen=4, minlen=2)) %>%
+  # Get 'em to the Gephi
+  saveAsGraph(file = here("Data/BasketRules_Multi.graphml"))
+
+BasketRules_Single <- read.delim(here("Data/groceries.txt"), header=FALSE) %$%
+  strsplit(V1,",") %>%
+  lapply(unique) %>%
+  #We cast to transactions here, as required by apriori
+  as("transactions") %>%
+  #run apriori to get the association rules
+  apriori(parameter=list(support=.0005, confidence=.001, maxlen=2, minlen=2)) %>%
+  # For this one, lift is the key parameter
+  # Again, see writeup
+  subset(lift>=5) %>%
+  # Get 'em to the Gephi
+  saveAsGraph(file = here("Data/BasketRules_Single.graphml"))
+
+read.delim(here("Data/groceries.txt"), header=FALSE) %$%
+  strsplit(V1,",") %>%
+  lapply(unique) %>%
+  #We cast to transactions here, as required by apriori
+  as("transactions") %>%
+  #run apriori to get the association rules
+  apriori(parameter=list(support=.0005, confidence=.001, maxlen=2, minlen=2)) %>%
+  # For this one, lift is the key parameter
+  # Again, see writeup
+  subset(lift>=10) %>%
+  DATAFRAME %>%
+  filter(row_number() %% 2 == 0)
+
