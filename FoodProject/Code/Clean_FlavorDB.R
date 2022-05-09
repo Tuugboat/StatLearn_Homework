@@ -5,7 +5,6 @@
 # _Long is the normal long format for summary tables
 # _Wide is an indicator for each molecule. It is *massive* by comparison, but is what we need for PCA/Clustering
 ######################
-
 Sys.glob(here("Data/FDBRaw/id*.json")) %>% foreach(CurFile=., .combine="rbind") %do% {
   try(jsonlite::fromJSON(txt=CurFile), T)
   #There are files in our folder that are html pages for denied requests. We want to drop those
@@ -36,8 +35,24 @@ Sys.glob(here("Data/FDBRaw/id*.json")) %>% foreach(CurFile=., .combine="rbind") 
   write.csv(here("Data/FoodMols_Long.csv")) %>%
   
   # Write the data in the wide format. This is what we need for clustering and PCA
-  pivot_wider(names_from=common_name, values_from=IndVal, values_fill = 0) %>%
-  write.csv(here("Data/FoodMols_Wide.csv"))
+  pivot_wider(names_from=common_name, values_from=IndVal, values_fill = 0) %T>%
+  # Note Tee pipe above
+  write.csv(here("Data/FoodMols_Wide.csv")) %>%
+  
+  #Janking the T pipe
+  # They don't like to appear in sequence, so we just pass through the start of the last one.
+  {.} %T>%
+  
+  # If you are reading this line, I am so sorry.
+  # I swapped LH for RH operation to get pipes to work appropriatley
+  # Since I wanted the tee pipe to skip both select and write.
+  { write.csv(select(., alias, ID), here("Data/FoodMols_Labels.csv")) } %>%
+  
+  #Lastly, drop the labels and write as a sparse matrix
+  select(-c(alias, ID)) %>%
+  as.matrix() %>%
+  as("sparseMatrix") %>%
+  writeMM(file=here("Data/FoodMol_Sparse.mtx"))
   
 # Quick note here on pivot_wider: when run a few iterations ago, diplyr recommended the values_fn=list to suppress some error
 # Probably, this error had to do with the absolutely wild naming of columns (fixed by common_name=make.names() above)

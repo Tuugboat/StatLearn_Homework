@@ -33,7 +33,8 @@ librarian::shelf(
   rjson,
   RColorBrewer,
   cluster,
-  LICORS
+  LICORS,
+  slam
 )
 
 # tell here where we are so we can use it elsewhere
