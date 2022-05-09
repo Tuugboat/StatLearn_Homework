@@ -1,0 +1,708 @@
+"","alias","CID"
+"1","Abalone",9
+"2","Abiyuch",9
+"3","Acerola",9
+"4","Acorn",9
+"5","Adzuki bean",9
+"6","Agar",9
+"7","Agave",9
+"8","Alaska wild rhubarb",9
+"9","Alfalfa",9
+"10","Allium",14
+"11","Allspice",10
+"12","Almond",5
+"13","Alpine sweetvetch",9
+"14","Amaranth",9
+"15","American butterfish",9
+"16","American pokeweed",9
+"17","Angelica",9
+"18","Anise",10
+"19","Anise Brandy",7
+"20","Anise Hyssop",14
+"21","Annual wild rice",9
+"22","Apple",4
+"23","Apple Brandy",7
+"24","Apple Cider Vinegar",14
+"25","Apricot",4
+"26","Arabica coffee",14
+"27","Arar",14
+"28","Armagnac Brandy",7
+"29","Arrack",14
+"30","Arrowhead",9
+"31","Arrowroot",9
+"32","Artemisia",9
+"33","Artichoke",9
+"34","Asafoetida",14
+"35","Ashgourd",9
+"36","Asparagus",1
+"37","Atlantic herring",9
+"38","Atlantic salmon",8
+"39","Atlantic wolffish",8
+"40","Avocado",5
+"41","Babaco",14
+"42","Babassu palm",9
+"43","Bagel",8
+"44","Bakery Products",14
+"45","Bamboo shoots",9
+"46","Banana",4
+"47","Bantu Beer",14
+"48","Barley",5
+"49","Bartlett Pear",14
+"50","Basil",11
+"51","Basmati Rice",14
+"52","Bayberry",9
+"53","Beans",1
+"54","Bearded seal",8
+"55","Beech nut",9
+"56","Beef",13
+"57","Beef Processed",13
+"58","Beer",3
+"59","Beetroot",5
+"60","Beluga whale",8
+"61","Bergamot",14
+"62","Berry",14
+"63","Berry wine",14
+"64","Bilberry",5
+"65","Bilberry Wine",6
+"66","Biscuit",9
+"67","Bison",8
+"68","Bitter Cherry",9
+"69","Bitter Orange",14
+"70","Bittergourd",9
+"71","Black-eyed pea",9
+"72","Black crowberry",9
+"73","Black Currant",11
+"74","Black huckleberry",9
+"75","Black mulberry",9
+"76","Black raspberry",9
+"77","Black salsify",9
+"78","Black Tea",14
+"79","Blackberry",5
+"80","Blackberry Brandy",7
+"81","Blue Cheese",2
+"82","Blueberry",5
+"83","Bonito",14
+"84","Borage",9
+"85","Botrytized Wine",6
+"86","Bottlegourd",9
+"87","Bourbon Whisky",12
+"88","Boysenberry",9
+"89","Brandy",7
+"90","Brazil Nut",5
+"91","Bread",5
+"92","Breadfruit",9
+"93","Breadnut tree seed",9
+"94","Breakfast cereal",9
+"95","Breakfast sandwich",8
+"96","Broccoli",5
+"97","Brussels Sprout",5
+"98","Buchu",14
+"99","Buckwheat",1
+"100","Buffalo currant",9
+"101","Burbot",9
+"102","Burdock",9
+"103","Burrito",8
+"104","Butter",13
+"105","Buttermilk",8
+"106","Butternut",9
+"107","Butternut squash",9
+"108","Cabbage",5
+"109","Cajeput",14
+"110","Cake",8
+"111","Calamus",14
+"112","Camembert Cheese",2
+"113","Camphor",14
+"114","Canada blueberry",9
+"115","Canadian Whisky",12
+"116","Candy bar",8
+"117","Canola Oil",5
+"118","Capers",9
+"119","Capsicum",10
+"120","Caraway",14
+"121","Cardamom",10
+"122","Cardoon",9
+"123","Caribou",8
+"124","Carob",9
+"125","Carom Seed",10
+"126","Carrot",10
+"127","Cashew Apple",14
+"128","Cashew nut",5
+"129","Cassava",9
+"130","Cassia",10
+"131","Catfish",8
+"132","Catjang pea",9
+"133","Cauliflower",5
+"134","Caviar",14
+"135","Celery",11
+"136","Chamomile",10
+"137","Champaca",14
+"138","Champagne",6
+"139","Chanterelle",9
+"140","Chard",9
+"141","Chayote",9
+"142","Cheddar Cheese",2
+"143","Cheese",2
+"144","Cherimoya",5
+"145","Cherry",5
+"146","Cherry Brandy",7
+"147","Cherry Pepper",14
+"148","Cherry tomato",9
+"149","Chervil",9
+"150","Chestnut",9
+"151","Chia",9
+"152","Chicken",13
+"153","Chickpea",5
+"154","Chicory",9
+"155","Chinese bayberry",9
+"156","Chinese chestnut",9
+"157","Chinese Quince",14
+"158","Chinook salmon",8
+"159","Chive",9
+"160","Chocolate",8
+"161","Chocolate spread",8
+"162","Chum salmon",8
+"163","Cichlidae",8
+"164","Cider",14
+"165","Cinnamon",10
+"166","Citronella",14
+"167","Citrus Fruits",14
+"168","Citrus Peel Oil",14
+"169","Clam",13
+"170","Clary Sage",14
+"171","Climbing bean",9
+"172","Cloud ear fungus",9
+"173","Cloudberry",9
+"174","Clove",10
+"175","Clupeinae",8
+"176","Cluster Bean",14
+"177","Cocoa",1
+"178","Cocoa butter",8
+"179","Cocoa powder",8
+"180","Coconut",1
+"181","Codfish",8
+"182","Coffee",3
+"183","Cognac Brandy",3
+"184","Cold cut",8
+"185","Colocasia",14
+"186","Colorado pinyon",9
+"187","Common ling",8
+"188","Common octopus",8
+"189","Common persimmon",9
+"190","Common salsify",9
+"191","Common Tuna",8
+"192","Common verbena",9
+"193","Comte Cheese",2
+"194","Conch",9
+"195","Cooking oil",8
+"196","Coriander",10
+"197","Corn",1
+"198","Corn chip",8
+"199","Corn grits",8
+"200","Corn Oil",14
+"201","Corn salad",9
+"202","Cornmint",10
+"203","Cottage Cheese",2
+"204","Cottonseed",9
+"205","Crab",8
+"206","Cranberry",5
+"207","Crayfish",8
+"208","Cream",8
+"209","Cream Cheese",2
+"210","Creosote",14
+"211","Crispbread",8
+"212","Cucumber",5
+"213","Cumin",10
+"214","Cupuaçu",9
+"215","Currant",14
+"216","Curry Leaf",14
+"217","Dairy Products",14
+"218","Dandelion",9
+"219","Dates",9
+"220","Deer",8
+"221","Deerberry",9
+"222","Devilfish",9
+"223","Dill",10
+"224","Dock",9
+"225","Domiati Cheese",2
+"226","Drumstick Leaf",14
+"227","Durian",9
+"228","Egg roll",8
+"229","Eggplant",5
+"230","Elderberry",5
+"231","Elliott's blueberry",9
+"232","Emmental Cheese",2
+"233","Endive",5
+"234","Enokitake",9
+"235","Epazote",9
+"236","Eucalyptus",14
+"237","European chestnut",9
+"238","Evening primrose",9
+"239","Fatty Fish",14
+"240","Feijoa",9
+"241","Fennel",10
+"242","Fenugreek",9
+"243","Fermented Tea",14
+"244","Feta Cheese",2
+"245","Fig",5
+"246","Filbert",13
+"247","Finnish Whisky",12
+"248","Fireweed",9
+"249","Fish",14
+"250","Fish Oil",14
+"251","Flatfish",8
+"252","Flaxseed",9
+"253","Focaccia",8
+"254","Frankfurter Sausage",14
+"255","French plantain",9
+"256","French toast",8
+"257","Fried Potato",13
+"258","Fruit juice",8
+"259","Fruit preserve",8
+"260","Garcinia Indica",14
+"261","Garden cress",9
+"262","Garland chrysanthemum",9
+"263","Garlic",5
+"264","Gelatin dessert",8
+"265","Geranium",14
+"266","Giant butterbur",9
+"267","Gin",8
+"268","Ginger",11
+"269","Ginkgo nuts",5
+"270","Ginseng",9
+"271","Goat Cheese",2
+"272","Goat Milk",14
+"273","Gooseberry",5
+"274","Gram bean",9
+"275","Grape",4
+"276","Grapefruit Peel Oil",14
+"277","Grass pea",9
+"278","Great horned owl",9
+"279","Green Beans",1
+"280","Green Tea",14
+"281","Green zucchini",5
+"282","Greenland halibut",8
+"283","Greenthread tea",9
+"284","Greylag goose",8
+"285","Groundcherry",9
+"286","Gruyere Cheese",2
+"287","Guava",4
+"288","Haddock",8
+"289","Ham",14
+"290","Hamburger",8
+"291","Hard wheat",9
+"292","Hazelnut",5
+"293","Hedge mustard",9
+"294","Hogplum",9
+"295","Honey",8
+"296","Hops",14
+"297","Hops Oil",13
+"298","Horned melon",9
+"299","Horse",8
+"300","Horseradish",9
+"301","Hot chocolate",8
+"302","Hyacinth",14
+"303","Hyacinth bean",9
+"304","Hyssop Oil",10
+"305","Ice cream",8
+"306","Icing",8
+"307","Irish moss",9
+"308","Jackfruit",9
+"309","Japanese chestnut",9
+"310","Japanese persimmon",9
+"311","Japanese pumpkin",9
+"312","Japanese Whisky",12
+"313","Jasmine",14
+"314","Jerusalem artichoke",9
+"315","Jew's ear",9
+"316","Jicama",9
+"317","Jostaberry",9
+"318","Jujube",9
+"319","Jute",9
+"320","Kai lan",9
+"321","Kale",9
+"322","Kelp",9
+"323","Kenaf",14
+"324","Ketchup",8
+"325","Kewda",14
+"326","Kidney Beans",13
+"327","Kiwifruit",5
+"328","Kohlrabi",5
+"329","Komatsuna",9
+"330","Kombu",9
+"331","Krill",14
+"332","Kumquat",9
+"333","Lamb",14
+"334","Lambsquarters",9
+"335","Lasagna",8
+"336","Laurel",11
+"337","Lavendar",14
+"338","Lean Fish",14
+"339","Leavening agent",8
+"340","Leek",5
+"341","Lemon",11
+"342","Lemon Balm",10
+"343","Lemon Grass",9
+"344","Lemon Peel Oil",14
+"345","Lemon verbena",9
+"346","Lentils",5
+"347","Lettuce",5
+"348","Lima Beans",1
+"349","Limburger Cheese",2
+"350","Lime",11
+"351","Lime Peel Oil",14
+"352","Linden",9
+"353","Lingonberry",5
+"354","Liqourice",14
+"355","Litchi",9
+"356","Lobster",8
+"357","Loganberry",9
+"358","Longan",9
+"359","Loquat",5
+"360","Lotus",5
+"361","Lovage",10
+"362","Lupine",9
+"363","Macadamia Nut",5
+"364","Macaroni and cheese",8
+"365","Mace",14
+"366","Maitake",9
+"367","Malabar plum",9
+"368","Malabar spinach",9
+"369","Malay Apple",14
+"370","Malt",13
+"371","Malt Whisky",12
+"372","Mammee apple",9
+"373","Mandarin Orange",11
+"374","Mandarin Orange Peel Oil",14
+"375","Mango",4
+"376","Margarine",8
+"377","Margarine like spread",8
+"378","Marjoram",11
+"379","Mastic Gum",14
+"380","Mate",14
+"381","Meat",14
+"382","Meatloaf",8
+"383","Medlar",9
+"384","Melon",4
+"385","Mentha Oil",14
+"386","Mexican groundcherry",9
+"387","Mexican oregano",9
+"388","Milk",13
+"389","Milk Fat",14
+"390","Milk Human",8
+"391","Milk Powder",8
+"392","Milkshake",8
+"393","Millet",9
+"394","Mint",10
+"395","Miso",8
+"396","Mixed nuts",9
+"397","Mollusc",8
+"398","Moth bean",9
+"399","Mountain Papaya",14
+"400","Mountain yam",9
+"401","Mozzarella Cheese",2
+"402","Mulberry",9
+"403","Mung bean",9
+"404","Munster Cheese",2
+"405","Muscadine grape",9
+"406","Mushroom",1
+"407","Musk Melon",5
+"408","Mustard",5
+"409","Mutton",8
+"410","Myrtle",14
+"411","Nachos",8
+"412","Nance",9
+"413","Nanking cherry",9
+"414","Naranjilla",9
+"415","Narrowleaf cattail",9
+"416","Natal plum",9
+"417","Neroli Oil",14
+"418","New Zealand spinach",9
+"419","Nigella Seed",14
+"420","Nopal",9
+"421","Northern pike",8
+"422","Nougat",8
+"423","Nutmeg",10
+"424","Nuts",14
+"425","Oats",1
+"426","Ohelo berry",9
+"427","Oil-seed Camellia",9
+"428","Oil palm",9
+"429","Okra",9
+"430","Olive",5
+"431","Onion",5
+"432","Orange",11
+"433","Orange Oil",14
+"434","Oregano",11
+"435","Oregon yampah",9
+"436","Oriental wheat",9
+"437","Orris",14
+"438","Ostrich",8
+"439","Ostrich fern",9
+"440","Other bread product",8
+"441","Other Cheeses",2
+"442","Other dish",8
+"443","Other fish product",8
+"444","Other frozen dessert",8
+"445","Other meat product",8
+"446","Other pasta dish",8
+"447","Other sandwich",8
+"448","Other snack food",8
+"449","Oyster",8
+"450","Oyster mushroom",9
+"451","Pak choy",9
+"452","Pancake",8
+"453","Paneer",14
+"454","Papaya",4
+"455","Papaya Brandy",7
+"456","Parmesan Cheese",2
+"457","Parsley",10
+"458","Parsnip",10
+"459","Passionfruit",4
+"460","Pasta",9
+"461","Pastry",8
+"462","Pate",8
+"463","Pawpaw",14
+"464","Peach",4
+"465","Peanut",1
+"466","Peanut Butter",14
+"467","Peanut Oil",14
+"468","Pear",5
+"469","Pear Brandy",7
+"470","Peas",5
+"471","Pecans",5
+"472","Pepino",14
+"473","Pepper",11
+"474","Pepper C. baccatum",9
+"475","Pepper C. chinense",9
+"476","Peppermint",10
+"477","Perciformes",8
+"478","Persimmon",9
+"479","Pheasant",8
+"480","Pie",8
+"481","Pie crust",8
+"482","Pigeon Pea",9
+"483","Pili nut",9
+"484","Pine",5
+"485","Pineapple",4
+"486","Pineappple sage",9
+"487","Pink salmon",8
+"488","Pistachio",5
+"489","Pitanga",9
+"490","Pizza",8
+"491","Plum",4
+"492","Plum Brandy",7
+"493","Plum Wine",6
+"494","Plumcot",14
+"495","Pomegranate",5
+"496","Popcorn",8
+"497","Poppy Seed",5
+"498","Pork",13
+"499","Port Wine",6
+"500","Pot pie",8
+"501","Potato",1
+"502","Potato chip",8
+"503","Potato puffs",8
+"504","Prairie turnip",9
+"505","Prickly Pear",9
+"506","Provolone Cheese",2
+"507","Pudding",8
+"508","Pummelo",9
+"509","Pumpkin",9
+"510","Purple laver",9
+"511","Purple mangosteen",9
+"512","Purslane",9
+"513","Quince",5
+"514","Quinoa",9
+"515","Rabbit",8
+"516","Radish",9
+"517","Rainbow trout",8
+"518","Raisin",14
+"519","Rambutan",9
+"520","Rapini",9
+"521","Raspberry",5
+"522","Raspberry Brandy",7
+"523","Red algae",9
+"524","Red Currant",5
+"525","Red raspberry",5
+"526","Red rice",9
+"527","Red Sage",14
+"528","Red Wine",6
+"529","redskin onion",9
+"530","Rhubarb",5
+"531","Rice",1
+"532","Ricotta Cheese",14
+"533","Rocket salad",9
+"534","Roibos Tea",14
+"535","Romano Cheese",2
+"536","Roquefort Cheese",2
+"537","Rose",14
+"538","Rose hip",9
+"539","Rose Wine",6
+"540","Roseapple",9
+"541","Roselle",9
+"542","Rosemary",11
+"543","Rowal",9
+"544","Rowanberry",9
+"545","Rum",3
+"546","Russian Cheese",2
+"547","Rutabaga",9
+"548","Rye",9
+"549","Rye Bread",8
+"550","Safflower",9
+"551","Saffron",10
+"552","Sage",10
+"553","Sago palm",9
+"554","Sake",8
+"555","Salad dressing",8
+"556","Salmon",14
+"557","Salmonberry",9
+"558","Salmonidae",8
+"559","Salt",8
+"560","Sapodilla",9
+"561","Saskatoon berry",9
+"562","Sassafras",14
+"563","Satsuma Orange",14
+"564","Sauce",8
+"565","Sausage",8
+"566","Scallop",14
+"567","Scarlet bean",9
+"568","Scotch Spearmint",14
+"569","Scotch Whisky",12
+"570","Sea Buckthorns",9
+"571","Semolina",8
+"572","Sesame",5
+"573","Sesbania flower",9
+"574","Shallot",9
+"575","Shea tree",9
+"576","Sheefish",8
+"577","Sheep Cheese",2
+"578","Sherry",6
+"579","Shiitake",9
+"580","Shrimp",13
+"581","Silver linden",9
+"582","Skimmed Milk",14
+"583","Skunk currant",9
+"584","Small leaf linden",9
+"585","Smoked Fish",14
+"586","Snack bar",8
+"587","Snail",8
+"588","Sockeye salmon",8
+"589","Soft drink",8
+"590","Sorghum",9
+"591","Sorrel",9
+"592","Soup",8
+"593","Sour Cherry",5
+"594","Sourdock",9
+"595","Sourdough",9
+"596","Soursop",9
+"597","Soy milk",8
+"598","Soy yogurt",8
+"599","Soybean",1
+"600","Soybean Oil",14
+"601","Soybean Sauce",8
+"602","Spanish Sage",14
+"603","Sparkleberry",9
+"604","Sparkling Wine",6
+"605","Spearmint",11
+"606","Spelt",9
+"607","Spinach",5
+"608","Spineless Monkey Orange",14
+"609","Spirit",8
+"610","Spirulina",9
+"611","Squab",8
+"612","Squashberry",9
+"613","Squid",8
+"614","Star Anise",10
+"615","Starfruit",4
+"616","Stew",8
+"617","Strawberry",4
+"618","Strawberry Jam",14
+"619","Strawberry Wine",6
+"620","Stuffing",8
+"621","Sugar",8
+"622","Sugar substitute",8
+"623","Sukiyaki",14
+"624","Summer savory",10
+"625","Sunflower",10
+"626","Swamp cabbage",9
+"627","Sweet custard",8
+"628","Sweet Grass",14
+"629","Sweet Potato",9
+"630","Sweetcorn",14
+"631","Swiss Cheese",2
+"632","Syrup",8
+"633","Taco",8
+"634","Tamale",8
+"635","Tamarind",1
+"636","Tangerine",14
+"637","Taro",9
+"638","Tarragon",10
+"639","Tartary buckwheat",9
+"640","Tea",1
+"641","Tea leaf willow",9
+"642","Teff",9
+"643","Thistle",9
+"644","Thyme",10
+"645","Tilsit Cheese",2
+"646","Tinda",9
+"647","Tobacco",14
+"648","Tofu",8
+"649","Tomato",1
+"650","Topping",8
+"651","Tortilla",8
+"652","Tortilla chip",8
+"653","Towel gourd",9
+"654","Trassi",14
+"655","Tree fern",9
+"656","Triticale",9
+"657","True frog",8
+"658","Truffle",14
+"659","Turbot",8
+"660","Turkey",8
+"661","Turkey Berry",14
+"662","Turmeric",10
+"663","Turnip",9
+"664","Ucuhuba",9
+"665","Valerian",14
+"666","Vanilla",1
+"667","Vegetable juice",8
+"668","Vegetarian food",8
+"669","Vinegar",8
+"670","Vodka",8
+"671","Wakame",9
+"672","Walnut",5
+"673","Wasabi",9
+"674","Water",8
+"675","Water Chestnut",9
+"676","Watercress",9
+"677","Wattle",14
+"678","Weinbrand Brandy",7
+"679","Welsh onion",9
+"680","Wheat",5
+"681","Wheaten Bread",14
+"682","Whey",8
+"683","Whisky",12
+"684","White Bread",14
+"685","White Currant",14
+"686","White lupine",9
+"687","White Pepper",14
+"688","White Wine",6
+"689","Whitefish",8
+"690","Whiting",8
+"691","Wholewheat Bread",8
+"692","Wild Cherry",14
+"693","Wild rice",9
+"694","Wine",6
+"695","Winged bean",9
+"696","Winter savory",10
+"697","Winter squash",9
+"698","Woodapple",14
+"699","Wort",13
+"700","Yam",9
+"701","Yardlong bean",9
+"702","Yautia",9
+"703","Yellow Passionfruit",14
+"704","Yellow pond lily",9
+"705","Yellow zucchini",5
+"706","Ylang-Ylang",14
+"707","Yogurt",8

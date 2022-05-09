@@ -20,4 +20,8 @@ PullMolecules <- function(Name, eID, MolList) {
 # in the list and assemble information in the format
 # (common_name, flavorprofile) with the end goal of using it in out analysis
 # This could probably be moved to a different file.
-GetFlavorProfiles <- 1
+GetFlavorProfiles <- function(MolList) {
+  MolList %>%
+    select(common_name, fooddb_flavor_profile) %>%
+    return
+}

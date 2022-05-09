@@ -30,11 +30,16 @@ Sys.glob(here("Data/FDBRaw/id*.json")) %>% foreach(CurFile=., .combine="rbind") 
   # I shudder to imagine the horror for chemists that results from their wild naming schemes
   # note on make.names: that guaruntees that all names will be different, not that no common names are created
   # This means 0 shared names among foods
-  mutate(ID = as.numeric(ID), common_name=make.names(common_name)) %T>%
+  mutate(ID = as.numeric(ID), common_name=make.names(common_name)) %>%
+  
+  # Big problems arise from a huge number of 1-compound items
+  group_by(alias) %>%
+  filter(n()>3) %>%
+  ungroup() %T>%
   
   # Write the list in the long format. This is better for summarizing the data later
   # Note Tee pipe before this
-  write.csv(here("Data/FoodMols_Long.csv")) %>%
+  write.csv(here("Data/FoodMols_Long.csv"))%>%
   
   # for whatever reason, we get some duplicates in the above. 
   # To fix this, we just group by then add the indicator afterwards

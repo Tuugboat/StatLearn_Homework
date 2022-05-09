@@ -38,10 +38,11 @@ librarian::shelf(
   tictoc
 )
 
-l# tell here where we are so we can use it elsewhere
+# tell here where we are so we can use it elsewhere
 here::i_am("Code/include.R")
-theme_set(theme_minimal())
-source(here("Code/Library_Food.R"))
 
 #Extensions---------
 #To check loaded packages use (.packages())
+theme_set(theme_minimal())
+source(here("Code/Library_Food.R"))
+

@@ -1,0 +1,409 @@
+---
+title: "Food Analysis"
+author: "Robert Petit"
+date: "May, 2022"
+output: 
+  md_document : default
+  pdf_document : 
+    extra_dependencies: ["float"]
+knit: (function(inputFile, encoding) {
+  rmarkdown::render(inputFile, output_format = "all") })
+---
+```{r PreAmble, include=F}
+# installs the librarian package if you don't have it
+set.seed(12062016)
+if (!("librarian" %in% rownames(utils::installed.packages()))) {
+  utils::install.packages("librarian")
+}
+
+librarian::shelf( 
+  cran_repo = "https://cran.microsoft.com/", # Dallas, TX
+  ask = FALSE,
+  stats, # https://stackoverflow.com/questions/26935095/r-dplyr-filter-not-masking-base-filter#answer-26935536
+  here,
+  kableExtra,
+  rlang,
+  ggthemes,
+  tidyverse,
+  janitor,
+  magrittr,
+  mosaic,
+  glue,
+  lubridate,
+  haven,
+  snakecase,
+  sandwich,
+  lmtest,
+  gganimate,
+  gapminder,
+  stargazer,
+  snakecase,
+  foreach,
+  # Here down is project specific
+  rjson,
+  RColorBrewer,
+  cluster,
+  LICORS,
+  slam,
+  tictoc
+)
+  
+# tell here where we are so we can use it elsewhere
+here::i_am("Writing/FoodProject_Writeup.Rmd")
+
+#Extensions---------
+#To check loaded packages use (.packages())
+theme_set(theme_minimal())
+source(here("Code/Library_Food.R"))
+
+
+FoodMols_Wide <- read.csv(here("Data/FoodMols_Wide.csv")) %>% select(-X)
+FoodMols_NoLab <- FoodMols_Wide %>% select(-alias, -ID)
+FoodMols_Sparse <- readMM(here("Data/FoodMol_Sparse.mtx"))
+FoodMols_Long <- read.csv(here("Data/FoodMols_Long.csv")) %>% select(-X)
+FoodMols_Labels <- read.csv(here("Data/FoodMols_Labels.csv")) %>% select(-X)
+CompSum = read.csv(here("Data/CompSummary.csv")) %>% select(-X)
+
+DivColor = brewer.pal(n=7, name="PRGn")
+QualColor5 = brewer.pal(n=5, name="Set1")
+
+NFoods = FoodMols_Wide %>% summarize(n()) %>% pull(1)
+NComps = FoodMols_Long %>% group_by(common_name) %>% summarize(total = n()) %>% summarize(n()) %>% pull(1)
+
+```
+
+
+
+# Introduction
+
+For a brief moment, consider deeply the process of cooking and eating a slice of bacon. There are a number of sensations that come to mind: the thin layer of fat that inevitable gets on your hand taking it out of the package followed by the sounds of it crackling when it hits the pan. Soon after, the kitchen is filled with the smell of maple and pork and you take the first little too-hot nibble. A small crunch followed immediately by saltiness then, slowly, the hearty pork and slightly-sweet maple fill your mouth.
+
+Taste is one of the most complicated senses humans possess; partly due to the volume of information processed (though in that regards, no sense will compare to sight) and partly due to the wide variety of information considered. This variety of information is one of the most confounding parts of our food preferences. We can break it out into several parts, the simplest of which are texture, sight, sound, and memory of the food. Slightly more complicated are the distinctions between taste and flavor. Tastes will include the five very specific "core" of food: sweet, sour, salty, bitter, and umami. Flavor will include nearly everything else we experience after putting food in our mouth and is vastly more complicated than taste; typically, anything that you can link directly with a smell will be a taste, since the olfactory system processes both smell and taste. This distinction between taste and flavor is somewhat elusive in some cases: the physical sensation associated with sour and salty foods is obvious, but it may be more challenging to try and separately consider the umami and flavor in soy sauce, or to seperate the sour from the flavor in a lemon.
+
+This project hones in on flavor specifically. There are a huge number of compounds that can contribute to flavor, each of which will have it's own flavor profile and personality. Typically, these are only given very basic consideration; either foods are looked at exclusively on a per-compound basis or ingredients are simply matched by the number of commonality they share with other individual ingredients. This work suffers extensively from the limited nature of the data, in particular the difference in observed molecules between different types of food, a topic which we briefly explore in the data. We will extend this by working with data on the compounds that are in a wide variety of ingredients and associating ingredients with one another in two ways: clustering on shared compounds and observing the principle components of foods and deciphering their various nuances.
+
+# Methods
+
+## The Data
+
+
+The principle data set used is the present flavor molecules in each of `r NFoods` recognizable ingredients, such as rye bread, garlic, and tangerines. There are `r NComps` tracked across these ingredients,  with a huge number of overlap between various foods. Both of these counts are after all transformations and simplifications discussed in this section.
+
+This data was scraped from [FlavorDB’s](https://cosylab.iiitd.edu.in/flavordb/) entity information [which gives a large overview of any given ingredient](https://cosylab.iiitd.edu.in/flavordb/entity_details?id=243)  and then cleaned to get the ‘common’ name (common to chemists, at least) of each flavor molecule it contains. We also build a complimentary data set that provides a basic flavor profile associated with each compound which, in turn, can be used to interpret the results of the clusters and principal components.
+
+``` {r CompHist, echo=F, fig.cap="Figure 1: Compound Count Frequencies"}
+read.csv(here("Data/FoodMols_Long_NoDrop.csv")) %>% select(-X) %>%
+  group_by(alias) %>%
+  summarize(NMols = n()) %>%
+  arrange(desc(NMols)) %>%
+  ggplot(mapping=aes(x=NMols)) +
+  geom_histogram(bins=50) +
+  labs(
+    title="Frequencies of Compound Counts",
+    y="Occurances",
+    x="Number of Compounds"
+  )
+```
+
+A quick glance at the counts of compounds in each ingredient shows that there are huge number of virtually unidentified ingredients. Many of these have just one or two compounds identified; since this is very uninformative, we drop all objects with fewer than 3 components. Since we don't make any inference that depends on a representative sample, this should not introduce any biases that we are worried about. Most of the dropped ingredients are things like walrus meat, which are not flavors that we can typically associate with anything else.
+
+``` {r ComplexityTable, echo=F, fig.cap="Figure 2: The 4 most and least compound-dense ingredients"}
+ComplexityTable = FoodMols_Long %>%
+  group_by(alias) %>%
+  summarize(NMols = n())
+
+MeanComplexity = ComplexityTable %>%
+  summarize(mNMols = mean(NMols)) %>%
+  pull(1)
+
+MedComplexity = ComplexityTable %>%
+  summarize(mNMols = median(NMols)) %>%
+  pull(1)
+
+
+# Food complexity
+ComplexityTable %>%
+  arrange(desc(NMols)) %>%
+  {rbind(head(., 4), tail(., 4))} %>%
+  ggplot(mapping=aes(x=reorder(alias, NMols), y=NMols, fill=alias)) +
+  geom_col() +
+  geom_label(aes(label=NMols)) +
+  scale_fill_brewer(type="qual", palette=2) +
+  coord_flip() +
+  theme(legend.position="none") +
+  labs(title="Number of Compounds Overview",
+       x="Top and Bottom 4 Ingredients",
+       y="Num. Compounds")
+```
+
+As you can see in figure 1, this data has some important nuances to it that become apparent at a quick glance of the most and least compound-dense foods in the set.  First, it is not a complete record of all compounds but rather a list of ‘common’ compounds in each food. Because of this, foods that are more commonly consumed will likely have more compounds in them; the extreme cases of this are in the very esoteric foods, which often only have one compound recorded. Second, foods are grouped together; each variety of peach is represented only as ‘peach’. This generally does not create a huge number of problems, but for cases like tea, which is hugely varied *and* very common, there are a disproportionate number of compounds associated with them. This causes significant issues for the 'matching' approach to food pairings, which match purely on the number of similar molecules observed. Clustering in particular should provide *some* limits to that effect, since each ingredient is forced to exist in only one cluster. 
+
+On average, each food will have a an average of `r MeanComplexity` molecules and a median of `r MedComplexity`. This hints at a left-skew of the data, wherein a small number have disproportionately large numbers of compound Thankfully, these tend to occur in places where we can provide very solid subjective interpretation, such as with tea, as opposed to confusing or difficult to consider ingredients like walrus meat, which means we can still interpret and understand our data using these methods.
+
+Additionally, there is the question of shared compound within our set. Since these are the source of our matching, extremely low or extremely high frequencies of any compound can be problematic for any clustering or component analysis.
+
+``` {r CompFreq, echo=F, fig.cap="Figure 3: The most common compounds in our set of ingredients"}
+# Molecular appearances
+FoodMols_Long %>%
+  group_by(common_name) %>%
+  summarize(freq = n()/NFoods) %>%
+  arrange(desc(freq)) %>%
+  head(5) %>%
+  ggplot(mapping=aes(x=reorder(common_name, freq), y=freq, fill=common_name)) +
+  geom_col() +
+  scale_fill_brewer(type="qual", palette=2) +
+  coord_flip() +
+  theme(legend.position="none") +
+  labs(title="Most Common Compounds",
+       x="Compound",
+       y="Frequency")
+
+MeanFreq = FoodMols_Long %>%
+  group_by(common_name) %>%
+  summarize(freq = n()/NFoods) %>%
+  summarize(mFreq = mean(freq)) %>%
+  pull(1)
+MedFreq = FoodMols_Long %>%
+  group_by(common_name) %>%
+  summarize(freq = n()/NFoods) %>%
+  summarize(mFreq = median(freq)) %>%
+  pull(1)
+
+```
+
+With an average frequency of `r MeanFreq` and a median of `r MedFreq` there are certainly a number of compounds that only show up in a very select number of foods. Generally, since these are what we are clustering on, we are not overwhelmingly concerned with these occurrences. For some more simple understanding of the data, we can turn to our flavor profiles for each of the frequent molecules above. Each ingredient that contains these flavor compounds will include those flavors in their overall profile. Further intuition is provided by a random sample of foods that contain this compounds.
+
+```{r FoodExamples, echo=F, fig.cap="A random sampling of foods that include each common compound", message=F}
+#Generates a list of foods that contain our top 5 compounds
+FoodMols_Long %>%
+  group_by(common_name) %>%
+  summarize(freq = n()/NFoods) %>%
+  arrange(desc(freq)) %>%
+  head(5) %>%
+  left_join(CompSum, by="common_name") %>%
+  unique%>%
+  left_join(FoodMols_Long, by="common_name") %>%
+  sample_n(30) %>%
+  select(-freq, -ID) %>%
+  group_by(common_name, profile) %>%
+  summarize(across(everything(), str_c, collapse=", ")) %>%
+  kable(col.names = c("Compound", "Flavor Profile", "Sample of Foods"))
+```
+
+## Methods
+
+The approach here will be twofold: first, we will cluster the data and observe the within-group characteristics for intuition. Second, we will perform basic analysis on the principle components of the foods, paying particular attention to foods that make up fairly unique branches of these components. Both of these approaches should provide some intuition beyond the matching approach since we infer the 'not present' chemicals in our data set and use those to shape both our clusters and our principal components. 
+
+The clustering method will produce single-membership sets of ingredients, where each cluster has significant commonalities with the other members of that cluster, even if they do not match exactly with a substantial number of them. The single-membership nature of the clusters will help to limit the impact of the extremely compound-dense ingredients in our data set, but comes with the trade off of not recognizing highly-versatile ingredients.
+
+The principal component analysis approach will help to quickly identify fringe relationships; by continuing to find components based on the residual of the prior components, not only will we manage to use the information in the 'not present' observations, we will also rapidly distill information from the frequently observed variables, leaving space for the less common but contextually important compounds. The continuous nature of the principal components will allow us to calibrate our desired observations more closely, but will confound the interperetation of any single one substantially.
+
+# Results
+
+The first task involved in clustering is to determine the optimal number of clusters. Working from the gap statistic, using the 'lowest within 1 standard error of the first max" rule, we select a consistent K value of 14.
+
+```{r GapStat, echo=F, fig.cap="Gap statistics for each K value between 0 and 50"}
+
+#Gap stat is calculated by performing the following (very slow) operation
+# clusGap(x=FoodMols_NoLab, FUNcluster=kmeans, K.max=50, B=100, nstart=50) %>% write_rds(here("Data/ClusGap.RDS"))
+
+#It is loaded from an RDS for convenience
+GapStat = here("Data/ClusGap.RDS") %>% read_rds()
+plot(GapStat, main="Gap Statistic, K: [0,50]")
+```
+
+Once we have the gap statistic, it is simple to turn to a k-means cluster. The sizes of the relative clusters vary substantially but they all take on non-trivial values.
+
+```{r Cluster, echo=F,warning=FALSE,message=FALSE,error=FALSE,fig.cap="Simple group sizes provide a first glance at the performance"}
+# Since it is impossible to get completley identical results with kmeans, we have written out a single result for the purpose of writing and reference
+# It is generated with
+# kmeans(FoodMols_NoLab, 14, iter.max=25, nstart=1) %>% write_rds(here("Data/ClusterResult.rds"))
+# and results are largely consistent where they stand.
+
+Cluster_FoodMols <- read_rds(here("Data/ClusterResult.rds"))
+ClustResult <- FoodMols_Labels %>% mutate(CID = Cluster_FoodMols$cluster)
+
+ClustResult %>%
+  group_by(CID) %>%
+  summarize(ClusterSize = n()) %>%
+  t %>%
+  as.data.frame %T>%
+  { row.names(.) <- c("Cluster Number", "Cluster Size")} %>%
+  kable(col.names=NULL)
+```
+
+The principal component analysis is somewhat more difficult to judge in aggregate. 5 components seems to be the highest rank out of which we can determine any information. Given the massive size of the loadings and the esoteric nature of the chemical compounds, it is impossible to interpret these by way of their values. Instead, we can translate their values to simply showing the primary components that each emphasizes more of, and each emphasizes less of.
+```{r PCA, echo=F,warning=FALSE,message=FALSE,error=FALSE}
+
+FoodPC = prcomp(FoodMols_NoLab, rank=5)
+
+FoodPC_Loadings_Summarized <- FoodPC$rotation %>% as.data.frame %>%
+  rownames_to_column("common_name") %>%
+  left_join(CompSum, by="common_name") %>%
+  unique %>%
+  pivot_longer(cols=starts_with("PC"),  names_to="PCID", values_to = "PCScale") %>%
+  group_by(PCID) %>%
+  slice_max(order_by = abs(PCScale), n=10) %>%
+  mutate(More=PCScale>0) %>%
+  ungroup()
+
+LoadDesc <- FoodPC_Loadings_Summarized %>%
+  group_by(PCID, More) %>%
+  summarize(across(profile, str_c, collapse=", ")) %>%
+  mutate(More = ifelse(More, "More", "Less")) %>%
+  pivot_wider(names_from = "More", values_from = "profile") %>%
+  mutate(across(everything(), ~ replace(., is.na(.), "None")))
+
+# Convoluted transformations to get the flavor profiles
+FoodPC$rotation %>% as.data.frame %>%
+  
+  #Slap common names to a column and join with the compound summaries
+  rownames_to_column("common_name") %>%
+  left_join(CompSum, by="common_name") %>%
+  unique %>%
+  
+  #Now we are going to pivot longer so that we can get the important compounds 
+  pivot_longer(cols=starts_with("PC"),  names_to="PCID", values_to = "PCScale") %>%
+  group_by(PCID) %>%
+  # We only care about the first 10 components for each
+  slice_max(order_by = abs(PCScale), n=5) %>%
+  # Boolean for positive values
+  mutate(More=PCScale>0) %>%
+  ungroup() %>%
+  # Now we split into groups by the components AND their sign
+  group_by(PCID, More) %>%
+  # Collapse the flavor profiles to a string
+  summarize(across(common_name, str_c, collapse=", ")) %>%
+  # Convert boolean to a string (for readability in the table)
+  mutate(More = ifelse(More, "More", "Less")) %>%
+  
+  # A final pivot wider to return everything to a more/less format
+  # Implicitly, the id columns are the PCIDs
+  pivot_wider(names_from = "More", values_from = "common_name") %>%
+  # Fill in NAs
+  mutate(across(everything(), ~ replace(., is.na(.), "None"))) %>%
+  t %>%
+  kable(col.names=NULL)
+
+
+```
+
+# Conclusion
+
+## Clustering
+
+The clustering results are somewhat promising. To see them more clearly, we can look at the actual ingredients that appear in each cluster.
+``` {r, echo=F, fig.cap="10 high-compound-count ingredients for each cluster. We choose the high-compound count because they tend to be closer to the center and more common than the others"}
+ClustResult %>%
+  left_join(ComplexityTable, by="alias") %>%
+  select(alias, CID, NMols) %>%
+  group_by(CID) %>%
+  slice_max(order_by = NMols, n=10) %>%
+  select(-NMols) %>%
+  summarize(across(everything(), str_c, collapse=", ")) %>%
+  kable(col.names=c("Cluster ID", "ingredients"))
+
+```
+
+Some of these clusters serve as important sanity checks for our results. Cluster 2, which contains 10 different types of cheese, is a good indicator that we are appropriately clustering by foods that would 'go well' together in the strictest sense. Cluster 6 provides the same information for wine, 7 pulls the brandy, 12 grabs all whisky, and 13 contains the high fat-content meats and oils. 
+
+ Cluster 3 is notable for it's minuscule size; it is the smallest cluster and has grabbed four drinks which are all commonly mixed together, though coffee and beer is a somewhat divisive combination. Cluster 4 is a medley of fruits, and it is hard to consider any combination of fruit in that list that would be anything less than delicious. Less-obvious clusters that are still not quite surprising are the herbs that make up clusters 9, 10, and 11. While these are expected to be close to one another, some pairings suggested here may surprise nonetheless: Orange and pepper in particular is a pairing that, while strange to most western palettes, is common in Indian and African foods, whereas peppermint and capsicum, a spicy pepper, would quite likely be off putting if used together.
+
+This leaves us with clusters 1, 5, 8, and 14. A close look at cluster 1 reveals a few curiosities; tea and tomato in particular is somewhat baffling. At first glance, the inclusion of cocoa may also seem strange, but it is important to consider that this is cocoa, not chocolate; in the U.S., cocoa and sugar are almost unanimous, but cocoa has a wide variety of applications, and can be an important source of bitterness and depth, Indian and Japanese cuisine in particular tend to pair cocoa with spice-heavy dishes, especially curry. 
+
+Cluster 5 is entirely plant-based foods, many of which are naturally sweet (with the exception of olives) though some, like onions, take a decent amount of cooking to yield their sweetness in a way that we can taste. Cluster 14 also contains a number of naturally sweet entries like cider, papaya, and Bartlett pears. The most confusing entry here, and perhaps in the entire result, is the inclusion of Bonito, which is a form of smoked and fermented tuna flakes common (and nearly exclusive to) Chinese and Japanese cuisine primarily used as a source of umami. 
+
+Last, and most interesting of all, is cluster 8. The initial three entries make sense, especially when you consider vinegar as a very diverse byproduct of wine. The other seven entries are odd at first glance, but crab is often paired with slightly sweet sauces and mixtures; Sake, an alcoholic beverage from Japan, is commonly paired with seafood such as crab and crayfish; and yogurt contains many of the same acids as vinegar. Out of the entire selection of foods from the clusters, it seems that cluster 8 has the most uncommon but potentially promising pairings. 
+
+## Principal Component Analysis
+
+The interpretation of the principal component analysis is much more limited than that of the clustering. The most sensible view is to look at the foods and flavors that make up the positive and negative directions for each principal component.
+
+```{r PCAnalysis, echo=F,warning=FALSE,message=FALSE,error=FALSE,fig.cap="This table provides the flavor pallette of the most impactful compounds; they are signed as more and less when the impact is positive and negative, respectively. Additionally, we see the 5 highest and 5 lowest scoring foods on each axis, to get an idea of the practical applications"}
+
+# Convoluted transformations to get the flavor profiles
+LoadingPalette = FoodPC$rotation %>% as.data.frame %>%
+  
+  #Slap common names to a column and join with the compound summaries
+  rownames_to_column("common_name") %>%
+  left_join(CompSum, by="common_name") %>%
+  unique %>%
+  
+  #Now we are going to pivot longer so that we can get the important compounds 
+  pivot_longer(cols=starts_with("PC"),  names_to="PCID", values_to = "PCScale") %>%
+  group_by(PCID) %>%
+  # We only care about the first 10 components for each
+  slice_max(order_by = abs(PCScale), n=10, with_ties=F) %>%
+  # Boolean for positive values
+  mutate(More=PCScale>0) %>%
+  ungroup() %>%
+  # Now we split into groups by the components AND their sign
+  group_by(PCID, More) %>%
+  # Collapse the flavor profiles to a string
+  summarize(across(profile, str_c, collapse=", ")) %>%
+  ungroup %>% #prep for rowwise()
+ 
+   # Again with the LHS->RHS->LHS swap for piping
+  # worse yet, it's inside of a rowwise()
+  # Here we convert the profile to a list, grab unique values, then collapse back to a string
+  # unlist is what makes unique() work on the vector
+  # There are better ways to do this
+  rowwise(c(PCID, More)) %>% mutate(profile=str_c(unique(unlist(str_split(profile, ", "))), collapse=", ")) %>%
+  ungroup() %>% #Drop rowwise
+  
+  # Convert Boolean to a string (for readability in the table)
+  mutate(More = ifelse(More, "More.Flavor", "Less.Flavor")) %>%
+  
+  # A final pivot wider to return everything to a more/less format
+  # Implicitly, the id columns are the PCIDs
+  pivot_wider(names_from = "More", values_from = "profile") %>%
+  # Fill in NAs
+  mutate(across(everything(), ~ replace(., is.na(.), "None")))
+
+LoadingFood <- FoodMols_Labels %>% cbind(FoodPC$x) %>%
+  select(-ID) %>%
+  pivot_longer(cols=starts_with("PC"),  names_to="PCID", values_to = "Score") %>%
+  group_by(PCID) %>%
+  
+  # Grab top and bottom 5 of each
+  { rbind(slice_max(., order_by = Score, n=5, with_ties=F), slice_min(., order_by = Score, n=5, with_ties=F)) } %>%
+  # Boolean for positive values
+  mutate(More=Score>0) %>%
+  ungroup() %>%
+  # Now we split into groups by the components AND their sign
+  group_by(PCID, More) %>%
+  # Collapse names
+  summarize(across(alias, str_c, collapse=", ")) %>%
+  # Convert Boolean to a string (for readability in the table)
+  mutate(More = ifelse(More, "More.Food", "Less.Food")) %>%
+  
+  # A final pivot wider to return everything to a more/less format
+  # Implicitly, the id columns are the PCIDs
+  pivot_wider(names_from = "More", values_from = "alias") %>%
+  # Fill in NAs
+  mutate(across(everything(), ~ replace(., is.na(.), "None")))
+
+left_join(LoadingPalette, LoadingFood, by="PCID") %>% mutate(PCID = str_remove_all(PCID, "PC")) %>% mutate(PCID = as.numeric(PCID)) %>% arrange(PCID) %>% kable(col.names = c("PC", "Less Flavor", "More Flavor", "Low-scored Foods", "High-scored Foods"))
+
+```
+These are somewhat difficult to interpret; since the flavor palettes are not mutually exclusive, we often will see the same flavors in both the "more" and "less" columns. Additionally, it is not quite so straightforward as simply separating the foods from one another, in many cases (such as PC4 and PC6) we actually see the two extremes commonly paired together whereas other identified components (such as PC9) simply clash with one another.
+
+One possible interpretation of these PCs is more as a comparing/contrasting axis than a set of pair/don't pair guidelines. By consulting these principal components, you can take a dish-wide approach and pick items that are on similar or opposite scales as you avoid or seek out contrasting flavors. This is not a blanket relationship, but rather a series of suggestions that may prove useful.
+
+## Results Comparison
+Overall, the approach seems to have produced a number of pairings that are somewhat intuitive while providing new pairings that are uncommon and potentially fruitful; to fully test these will require an extraordinary amount of cooking, but there do seem to be some improvements, if only in select cases, to the typical method of simply matching foods by the most number of similarities. The main limitations of this method come from the data; the grouping of the observations causes significant, arbitrary loss of accuracy and the inconsistent nature of the compounds being observed may unfairly skew the data toward established combinations and comparisons.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
