@@ -1,3 +1,16 @@
+# Abstract
+
+For this project, we will be attempting to suggest pairings with,
+replacements for, and additions to common ingredients in food based on
+the observed flavor compounds in the ingredients. To do this, we scrape
+a large set of ingredients and their associated chemical compounds from
+[FlavorDB](https://cosylab.iiitd.edu.in/flavordb/) and investigate the
+cross-ingredient similarities through both clustering and principal
+analysis. We find success in pairing ingredients with the results of
+clustering, while principal component analysis provides colorful, if
+obscure, methods for comparing and contrasting ingredients for
+subjective interpretations.
+
 # Introduction
 
 For a brief moment, consider deeply the process of cooking and eating a
@@ -66,22 +79,20 @@ set that provides a basic flavor profile associated with each compound
 which, in turn, can be used to interpret the results of the clusters and
 principal components.
 
-![Figure 1: Compound Count
-Frequencies](FoodProject_Writeup_files/figure-markdown_strict/CompHist-1.png)
+A quick glance at the counts of compounds (see appendix) in each
+ingredient shows that there are huge number of virtually unidentified
+ingredients. Many of these have just one or two compounds identified;
+since this is very uninformative, we drop all objects with fewer than 3
+components. Since we don’t make any inference that depends on a
+representative sample, this should not introduce any biases that we are
+worried about. Most of the dropped ingredients are things like walrus
+meat, which are not flavors that we can typically associate with
+anything else.
 
-A quick glance at the counts of compounds in each ingredient shows that
-there are huge number of virtually unidentified ingredients. Many of
-these have just one or two compounds identified; since this is very
-uninformative, we drop all objects with fewer than 3 components. Since
-we don’t make any inference that depends on a representative sample,
-this should not introduce any biases that we are worried about. Most of
-the dropped ingredients are things like walrus meat, which are not
-flavors that we can typically associate with anything else.
-
-![Figure 2: The 4 most and least compound-dense
+![The 4 most and least compound-dense
 ingredients](FoodProject_Writeup_files/figure-markdown_strict/ComplexityTable-1.png)
 
-As you can see in figure 1, this data has some important nuances to it
+As you can see in Figure 1, this data has some important nuances to it
 that become apparent at a quick glance of the most and least
 compound-dense ingredients in the set. First, it is not a complete
 record of all compounds but rather a list of ‘common’ compounds in each
@@ -116,7 +127,7 @@ Since these are the source of our matching, extremely low or extremely
 high frequencies of any compound can be problematic for any clustering
 or component analysis.
 
-![Figure 3: The most common compounds in our set of
+![The most common compounds in our set of
 ingredients](FoodProject_Writeup_files/figure-markdown_strict/CompFreq-1.png)
 
 With an average frequency of 0.047424 and a median of 0.0056577 there
@@ -237,16 +248,11 @@ interperetation of any single one substantially.
 # Results
 
 The first task involved in clustering is to determine the optimal number
-of clusters. Working from the gap statistic, using the ’lowest within 1
-standard error of the first max” rule, we select a consistent K value of
-14.
-
-![Gap statistics for each K value between 0 and
-50](FoodProject_Writeup_files/figure-markdown_strict/GapStat-1.png)
-
-Once we have the gap statistic, it is simple to turn to a k-means
-cluster. The sizes of the relative clusters vary substantially but they
-all take on non-trivial values.
+of clusters. Working from the gap statistic (see appendix), using the
+’lowest within 1 standard error of the first max” rule, we select a
+consistent K value of 14. Once we have a desired number of clusters, it
+is simple to turn to a k-means cluster. The sizes of the relative
+clusters vary substantially but they all take on non-trivial values.
 
 <table>
 <tbody>
@@ -779,3 +785,11 @@ limitations of this method come from the data; the grouping of the
 observations causes significant, arbitrary loss of accuracy and the
 inconsistent nature of the compounds being observed may unfairly skew
 the data toward established combinations and comparisons.
+
+# Apendix
+
+![Compound Count
+Frequencies](FoodProject_Writeup_files/figure-markdown_strict/CompHist-1.png)
+
+![Gap statistics for each K value between 0 and
+50](FoodProject_Writeup_files/figure-markdown_strict/GapStat-1.png)

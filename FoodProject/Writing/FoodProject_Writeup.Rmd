@@ -4,12 +4,18 @@ author: "Robert Petit"
 date: "May, 2022"
 output: 
   md_document : default
-  pdf_document : 
-    extra_dependencies: ["float"]
-knit: (function(inputFile, encoding) {
-  rmarkdown::render(inputFile, output_format = "all") })
+  
+
 ---
 ```{r PreAmble, include=F}
+
+# To knit to PDF:
+# pdf_document :
+#     extra_dependencies: ["float"]
+#knit: (function(inputFile, encoding) {
+#  rmarkdown::render(inputFile, output_format = "all") })
+
+
 # installs the librarian package if you don't have it
 set.seed(12062016)
 if (!("librarian" %in% rownames(utils::installed.packages()))) {
@@ -72,6 +78,9 @@ NComps = FoodMols_Long %>% group_by(common_name) %>% summarize(total = n()) %>% 
 
 ```
 
+# Abstract
+
+For this project, we will be attempting to suggest pairings with, replacements for, and additions to common ingredients in food based on the observed flavor compounds in the ingredients. To do this, we scrape a large set of ingredients and their associated chemical compounds from [FlavorDB](https://cosylab.iiitd.edu.in/flavordb/) and investigate the cross-ingredient similarities through both clustering and principal analysis. We find success in pairing ingredients with the results of clustering, while principal component analysis provides colorful, if obscure, methods for comparing and contrasting ingredients for subjective interpretations.
 
 
 # Introduction
@@ -91,23 +100,9 @@ The data set we will draw from is a list of observed flavor molecules in each of
 
 This data was scraped from [FlavorDB’s](https://cosylab.iiitd.edu.in/flavordb/) entity information [which gives a large overview of any given ingredient](https://cosylab.iiitd.edu.in/flavordb/entity_details?id=243)  and then cleaned to get the ‘common’ name (common to chemists, at least) of each flavor molecule it contains. We also build a complimentary data set that provides a basic flavor profile associated with each compound which, in turn, can be used to interpret the results of the clusters and principal components.
 
-``` {r CompHist, echo=F, fig.cap="Figure 1: Compound Count Frequencies"}
-read.csv(here("Data/FoodMols_Long_NoDrop.csv")) %>% select(-X) %>%
-  group_by(alias) %>%
-  summarize(NMols = n()) %>%
-  arrange(desc(NMols)) %>%
-  ggplot(mapping=aes(x=NMols)) +
-  geom_histogram(bins=50) +
-  labs(
-    title="Frequencies of Compound Counts",
-    y="Occurances",
-    x="Number of Compounds"
-  )
-```
+A quick glance at the counts of compounds (see appendix) in each ingredient shows that there are huge number of virtually unidentified ingredients. Many of these have just one or two compounds identified; since this is very uninformative, we drop all objects with fewer than 3 components. Since we don't make any inference that depends on a representative sample, this should not introduce any biases that we are worried about. Most of the dropped ingredients are things like walrus meat, which are not flavors that we can typically associate with anything else.
 
-A quick glance at the counts of compounds in each ingredient shows that there are huge number of virtually unidentified ingredients. Many of these have just one or two compounds identified; since this is very uninformative, we drop all objects with fewer than 3 components. Since we don't make any inference that depends on a representative sample, this should not introduce any biases that we are worried about. Most of the dropped ingredients are things like walrus meat, which are not flavors that we can typically associate with anything else.
-
-``` {r ComplexityTable, echo=F, fig.cap="Figure 2: The 4 most and least compound-dense ingredients"}
+``` {r ComplexityTable, echo=F, fig.cap="The 4 most and least compound-dense ingredients"}
 ComplexityTable = FoodMols_Long %>%
   group_by(alias) %>%
   summarize(NMols = n())
@@ -136,13 +131,13 @@ ComplexityTable %>%
        y="Num. Compounds")
 ```
 
-As you can see in figure 1, this data has some important nuances to it that become apparent at a quick glance of the most and least compound-dense ingredients in the set.  First, it is not a complete record of all compounds but rather a list of ‘common’ compounds in each ingredient. Because of this, ingredients that are more commonly consumed will likely have more compounds identified in them. There are two extremes to this: at low end very esoteric ingredients, which often only have a few compounds recorded whereas simpler but more common ingredients will have many more compounds identified. The other cause for the vast differences is in the somewhat arbitrary nature of how ingredients are grouped together; each variety of peach is represented only as ‘peach’ whereas there are dozens of different whisky and cheese variety. This generally does not create a huge number of problems, but for cases like tea, which is hugely varied, grouped into one stack, *and* very common, there are a disproportionate number of compounds associated with it. This causes significant issues for the 'matching' approach to food pairings, which matches purely on the number of similar molecules observed. Clustering in particular should provide *some* limits to that effect, since each ingredient is forced to exist in only one cluster. 
+As you can see in Figure 1, this data has some important nuances to it that become apparent at a quick glance of the most and least compound-dense ingredients in the set.  First, it is not a complete record of all compounds but rather a list of ‘common’ compounds in each ingredient. Because of this, ingredients that are more commonly consumed will likely have more compounds identified in them. There are two extremes to this: at low end very esoteric ingredients, which often only have a few compounds recorded whereas simpler but more common ingredients will have many more compounds identified. The other cause for the vast differences is in the somewhat arbitrary nature of how ingredients are grouped together; each variety of peach is represented only as ‘peach’ whereas there are dozens of different whisky and cheese variety. This generally does not create a huge number of problems, but for cases like tea, which is hugely varied, grouped into one stack, *and* very common, there are a disproportionate number of compounds associated with it. This causes significant issues for the 'matching' approach to food pairings, which matches purely on the number of similar molecules observed. Clustering in particular should provide *some* limits to that effect, since each ingredient is forced to exist in only one cluster. 
 
 On average, each ingredient will have an average of `r MeanComplexity` molecules and a median of `r MedComplexity`. This hints at a left-skew of the data, wherein a small number have disproportionately large numbers of compound Thankfully, these tend to occur in places where we can provide very solid subjective interpretation, such as with tea, as opposed to confusing or difficult to consider ingredients like walrus meat, which means we can still interpret and understand our data using these methods.
 
 Additionally, there is the question of shared compound within our set. Since these are the source of our matching, extremely low or extremely high frequencies of any compound can be problematic for any clustering or component analysis.
 
-``` {r CompFreq, echo=F, fig.cap="Figure 3: The most common compounds in our set of ingredients"}
+``` {r CompFreq, echo=F, fig.cap="The most common compounds in our set of ingredients"}
 # Molecular appearances
 FoodMols_Long %>%
   group_by(common_name) %>%
@@ -200,19 +195,7 @@ The principal component analysis approach will help to quickly identify fringe r
 
 # Results
 
-The first task involved in clustering is to determine the optimal number of clusters. Working from the gap statistic, using the 'lowest within 1 standard error of the first max" rule, we select a consistent K value of 14.
-
-```{r GapStat, echo=F, fig.cap="Gap statistics for each K value between 0 and 50"}
-
-#Gap stat is calculated by performing the following (very slow) operation
-# clusGap(x=FoodMols_NoLab, FUNcluster=kmeans, K.max=50, B=100, nstart=50) %>% write_rds(here("Data/ClusGap.RDS"))
-
-#It is loaded from an RDS for convenience
-GapStat = here("Data/ClusGap.RDS") %>% read_rds()
-plot(GapStat, main="Gap Statistic, K: [0,50]")
-```
-
-Once we have the gap statistic, it is simple to turn to a k-means cluster. The sizes of the relative clusters vary substantially but they all take on non-trivial values.
+The first task involved in clustering is to determine the optimal number of clusters. Working from the gap statistic (see appendix), using the 'lowest within 1 standard error of the first max" rule, we select a consistent K value of 14. Once we have a desired number of clusters, it is simple to turn to a k-means cluster. The sizes of the relative clusters vary substantially but they all take on non-trivial values.
 
 ```{r Cluster, echo=F,warning=FALSE,message=FALSE,error=FALSE,fig.cap="Simple group sizes provide a first glance at the performance"}
 # Since it is impossible to get completley identical results with kmeans, we have written out a single result for the purpose of writing and reference
@@ -229,7 +212,7 @@ ClustResult %>%
   t %>%
   as.data.frame %T>%
   { row.names(.) <- c("Cluster Number", "Cluster Size")} %>%
-  kable(col.names=NULL)
+  kable( col.names=NULL)
 ```
 
 The principal component analysis is somewhat more difficult to judge in aggregate. 5 components seems to be the highest rank out of which we can determine any information. Given the massive size of the loadings and the esoteric nature of the chemical compounds, it is impossible to interpret these by way of their values. Instead, we can translate their values to simply showing the primary components that each emphasizes more of, and each emphasizes less of.
@@ -283,7 +266,7 @@ FoodPC$rotation %>% as.data.frame %>%
   # Fill in NAs
   mutate(across(everything(), ~ replace(., is.na(.), "None"))) %>%
   t %>%
-  kable(col.names=NULL)
+  kable( col.names=NULL)
 
 
 ```
@@ -301,7 +284,7 @@ ClustResult %>%
   slice_max(order_by = NMols, n=10) %>%
   select(-NMols) %>%
   summarize(across(everything(), str_c, collapse=", ")) %>%
-  kable(col.names=c("Cluster ID", "ingredients"))
+  kable( col.names=c("Cluster ID", "ingredients"))
 
 ```
 
@@ -386,6 +369,7 @@ LoadingFood <- FoodMols_Labels %>% cbind(FoodPC$x) %>%
 left_join(LoadingPalette, LoadingFood, by="PCID") %>% mutate(PCID = str_remove_all(PCID, "PC")) %>% mutate(PCID = as.numeric(PCID)) %>% arrange(PCID) %>% kable(col.names = c("PC", "Less Flavor", "More Flavor", "Low-scored Foods", "High-scored Foods"))
 
 ```
+
 These are somewhat difficult to interpret; since the flavor palettes are not mutually exclusive, we often will see the same flavors in both the "more" and "less" columns. Additionally, it is not quite so straightforward as simply separating the ingredients from one another, in many cases (such as PC4 and PC6) we actually see the two extremes commonly paired together whereas other identified components (such as PC9) simply clash with one another.
 
 One possible interpretation of these PCs is more as a comparing/contrasting axis than a set of pair/don't pair guidelines. By consulting these principal components, you can take a dish-wide approach and pick items that are on similar or opposite scales as you avoid or seek out contrasting flavors. This is not a blanket relationship, but rather a series of suggestions that may prove useful.
@@ -393,9 +377,32 @@ One possible interpretation of these PCs is more as a comparing/contrasting axis
 ## Results Comparison
 Overall, the approach seems to have produced a number of pairings that are somewhat intuitive while providing new pairings that are uncommon and potentially fruitful; to fully test these will require an extraordinary amount of cooking, but there do seem to be some improvements, if only in select cases, to the typical method of simply matching ingredients by the most number of similarities. The main limitations of this method come from the data; the grouping of the observations causes significant, arbitrary loss of accuracy and the inconsistent nature of the compounds being observed may unfairly skew the data toward established combinations and comparisons.
 
+# Apendix
 
 
+``` {r CompHist, echo=F, fig.cap="Compound Count Frequencies"}
+read.csv(here("Data/FoodMols_Long_NoDrop.csv")) %>% select(-X) %>%
+  group_by(alias) %>%
+  summarize(NMols = n()) %>%
+  arrange(desc(NMols)) %>%
+  ggplot(mapping=aes(x=NMols)) +
+  geom_histogram(bins=50) +
+  labs(
+    title="Frequencies of Compound Counts",
+    y="Occurances",
+    x="Number of Compounds"
+  )
+```
 
+```{r GapStat, echo=F, fig.cap="Gap statistics for each K value between 0 and 50"}
+
+#Gap stat is calculated by performing the following (very slow) operation
+# clusGap(x=FoodMols_NoLab, FUNcluster=kmeans, K.max=50, B=100, nstart=50) %>% write_rds(here("Data/ClusGap.RDS"))
+
+#It is loaded from an RDS for convenience
+GapStat = here("Data/ClusGap.RDS") %>% read_rds()
+plot(GapStat, main="Gap Statistic, K: [0,50]")
+```
 
 
 
